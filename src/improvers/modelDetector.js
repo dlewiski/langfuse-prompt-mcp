@@ -245,9 +245,9 @@ function isTechniqueSuitable(model, technique) {
   return requirement ? features[requirement] === true : true;
 }
 
-module.exports = {
+export {
   detectModel,
   getModelFeatures,
   isTechniqueSuitable,
-  MODEL_PATTERNS,
+  MODEL_PATTERNS
 };

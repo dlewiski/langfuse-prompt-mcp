@@ -3,11 +3,11 @@
  * Main orchestrator for model detection and optimization
  */
 
-const { detectModel, getModelFeatures } = require('./modelDetector');
-const { applyBaseImprovements } = require('./baseOptimizer');
-const { optimizeForClaude } = require('./models/claudeOptimizer');
-const { optimizeForGPT } = require('./models/gptOptimizer');
-const { optimizeForGemini } = require('./models/geminiOptimizer');
+import { detectModel, getModelFeatures } from './modelDetector.js';
+import { applyBaseImprovements } from './baseOptimizer.js';
+import { optimizeForClaude } from './models/claudeOptimizer.js';
+import { optimizeForGPT } from './models/gptOptimizer.js';
+import { optimizeForGemini } from './models/geminiOptimizer.js';
 
 /**
  * Main optimization function that applies both base and model-specific improvements
@@ -338,7 +338,7 @@ function extractCriticalKeywords(prompt) {
   return keywords;
 }
 
-module.exports = {
+export {
   optimizePrompt,
   applyLayeredOptimization,
   detectComplexityLevel,

@@ -371,7 +371,7 @@ ${context ? `**Context**: ${context}` : ''}
 `;
 }
 
-module.exports = {
+export {
   optimizeForGemini,
   addSafetyConfiguration,
   addGroundingInstructions,

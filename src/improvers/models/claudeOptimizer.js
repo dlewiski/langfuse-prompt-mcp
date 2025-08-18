@@ -327,7 +327,7 @@ function createClaudeExample(input, output) {
 </example>`;
 }
 
-module.exports = {
+export {
   optimizeForClaude,
   transformToXMLStructure,
   addThinkingTags,

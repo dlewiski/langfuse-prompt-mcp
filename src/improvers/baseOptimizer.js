@@ -313,7 +313,7 @@ function analyzeImprovementOpportunities(prompt) {
   return opportunities;
 }
 
-module.exports = {
+export {
   applyBaseImprovements,
   enhanceTaskClarity,
   improveStructure,

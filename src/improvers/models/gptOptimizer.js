@@ -412,7 +412,7 @@ function createGPTExample(input, output) {
   };
 }
 
-module.exports = {
+export {
   optimizeForGPT,
   createSystemMessage,
   addResponseFormat,
