@@ -1,18 +1,24 @@
+import { needsImprovement } from '../utils/scoring.js';
+import { SCORE_THRESHOLDS } from '../constants.js';
+
 export function generateRecommendations(scores) {
   const recommendations = [];
   
   for (const [criterion, data] of Object.entries(scores)) {
-    if (data.score < 0.7) {
+    if (needsImprovement(data.score)) {
+      const impactScore = Math.round((1 - data.score) * data.weighted * 10);
       recommendations.push({
         criterion,
         currentScore: data.score,
         recommendation: getRecommendation(criterion),
-        impact: `+${Math.round((1 - data.score) * data.weighted * 10)}% potential improvement`,
+        impact: `+${impactScore}% potential improvement`,
+        impactScore, // Add numeric score for better sorting
       });
     }
   }
   
-  return recommendations.sort((a, b) => b.impact.localeCompare(a.impact));
+  // Sort by numeric impact score instead of string comparison
+  return recommendations.sort((a, b) => b.impactScore - a.impactScore);
 }
 
 export function getRecommendation(criterion) {
