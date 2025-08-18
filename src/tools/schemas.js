@@ -9,6 +9,8 @@ export const ImproveSchema = z.object({
   prompt: z.string().describe('The prompt to improve'),
   promptId: z.string().optional().describe('Optional Langfuse prompt ID'),
   techniques: z.array(z.string()).optional().describe('Specific techniques to apply'),
+  targetModel: z.string().optional().describe('Target model for optimization (claude, gpt, gemini)'),
+  enableModelOptimization: z.boolean().optional().default(true).describe('Enable model-specific optimizations'),
 });
 
 export const CompareSchema = z.object({

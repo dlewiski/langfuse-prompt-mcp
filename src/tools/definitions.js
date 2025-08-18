@@ -36,7 +36,7 @@ export const toolDefinitions = [
   },
   {
     name: 'improve',
-    description: 'Generate an improved version of a prompt',
+    description: 'Generate an improved version of a prompt with model-specific optimizations',
     inputSchema: {
       type: 'object',
       properties: {
@@ -46,6 +46,16 @@ export const toolDefinitions = [
           type: 'array',
           items: { type: 'string' },
           description: 'Specific techniques to apply',
+        },
+        targetModel: {
+          type: 'string',
+          description: 'Target model for optimization (claude, gpt, gemini)',
+          enum: ['claude', 'gpt', 'gemini'],
+        },
+        enableModelOptimization: {
+          type: 'boolean',
+          description: 'Enable model-specific optimizations',
+          default: true,
         },
       },
       required: ['prompt'],
