@@ -38,21 +38,32 @@ export async function applyImprovements(prompt, evaluation, requestedTechniques 
 function determineTechniquesFromEvaluation(evaluation) {
   const techniquesToApply = [];
   
-  // Apply techniques based on low scores
-  if (evaluation.scores.chainOfThought.score < 0.6) {
+  // Handle case where evaluation doesn't have scores property
+  if (!evaluation || !evaluation.scores) {
+    console.warn('[Improver] Evaluation missing scores, applying default techniques');
+    return ['xml-structure', 'chain-of-thought', 'rich-examples'];
+  }
+  
+  // Safely check each score with optional chaining
+  if (evaluation.scores.chainOfThought?.score < 0.6) {
     techniquesToApply.push('chain-of-thought');
   }
-  if (evaluation.scores.structure.score < 0.6) {
+  if (evaluation.scores.structure?.score < 0.6) {
     techniquesToApply.push('xml-structure');
   }
-  if (evaluation.scores.examples.score < 0.6) {
+  if (evaluation.scores.examples?.score < 0.6) {
     techniquesToApply.push('rich-examples');
   }
-  if (evaluation.scores.errorHandling.score < 0.6) {
+  if (evaluation.scores.errorHandling?.score < 0.6) {
     techniquesToApply.push('error-handling');
   }
-  if (!evaluation.scores.successCriteria || evaluation.scores.outputFormat.score < 0.6) {
+  if (evaluation.scores.outputFormat?.score < 0.6) {
     techniquesToApply.push('success-criteria');
+  }
+  
+  // If no specific techniques identified, apply basic improvements
+  if (techniquesToApply.length === 0) {
+    techniquesToApply.push('xml-structure', 'chain-of-thought');
   }
   
   return techniquesToApply;
