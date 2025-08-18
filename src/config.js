@@ -130,6 +130,39 @@ const parseIntWithValidation = (value, defaultValue, min = 0, max = Infinity) =>
 };
 
 /**
+ * Model-specific configuration
+ * @type {Object}
+ */
+export const MODEL_CONFIG = Object.freeze({
+  claude: {
+    preferredStructure: 'xml',
+    maxContextWindow: 200000,
+    supportsThinking: true,
+    supportsPrefilling: true,
+    defaultTemperature: 0.7,
+  },
+  gpt: {
+    preferredStructure: 'json',
+    maxContextWindow: 128000,
+    supportsSystemMessage: true,
+    supportsFunctionCalling: true,
+    defaultTemperature: 0.5,
+  },
+  gemini: {
+    preferredStructure: 'markdown',
+    maxContextWindow: 2000000,
+    supportsGrounding: true,
+    supportsContextCaching: true,
+    defaultSafetyLevel: 'BLOCK_NONE',
+  },
+  generic: {
+    preferredStructure: 'markdown',
+    maxContextWindow: 32000,
+    defaultTemperature: 0.5,
+  },
+});
+
+/**
  * Application configuration constants
  * @type {Object}
  */
@@ -167,9 +200,17 @@ export const CONFIG = Object.freeze({
   // Feature flags
   ENABLE_METRICS: process.env.ENABLE_METRICS === 'true',
   DEBUG_MODE: process.env.DEBUG === 'true',
+  
+  // Model optimization settings
+  ENABLE_MODEL_OPTIMIZATION: process.env.ENABLE_MODEL_OPTIMIZATION !== 'false',
+  DEFAULT_TARGET_MODEL: process.env.DEFAULT_TARGET_MODEL || 'auto',
+  MODEL_DETECTION_CONFIDENCE_THRESHOLD: parseFloat(
+    process.env.MODEL_DETECTION_CONFIDENCE_THRESHOLD || '0.7'
+  ),
 });
 
 // Log configuration in debug mode
 if (CONFIG.DEBUG_MODE) {
   console.log('[Config] Running with configuration:', CONFIG);
+  console.log('[Config] Model configuration:', MODEL_CONFIG);
 }
