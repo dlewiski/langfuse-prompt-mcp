@@ -1,0 +1,91 @@
+export const toolDefinitions = [
+  {
+    name: 'track',
+    description: 'Track a prompt to Langfuse for history and analysis',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string', description: 'The prompt to track' },
+        category: { type: 'string', description: 'Optional category' },
+        metadata: { 
+          type: 'object', 
+          description: 'Optional metadata',
+          properties: {
+            wordCount: { type: 'number' },
+            complexity: { type: 'string' },
+            hasCode: { type: 'boolean' },
+            frameworks: { type: 'array', items: { type: 'string' } },
+          }
+        },
+        quickScore: { type: 'number', description: 'Optional quick score 0-100' },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
+    name: 'evaluate',
+    description: 'Evaluate a prompt on 10 criteria and get improvement recommendations',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string', description: 'The prompt to evaluate' },
+        promptId: { type: 'string', description: 'Optional Langfuse prompt ID' },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
+    name: 'improve',
+    description: 'Generate an improved version of a prompt',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: { type: 'string', description: 'The prompt to improve' },
+        promptId: { type: 'string', description: 'Optional Langfuse prompt ID' },
+        techniques: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Specific techniques to apply',
+        },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
+    name: 'compare',
+    description: 'Compare two prompt versions',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt1: { type: 'string', description: 'First prompt version' },
+        prompt2: { type: 'string', description: 'Second prompt version' },
+        promptId: { type: 'string', description: 'Optional Langfuse prompt ID' },
+      },
+      required: ['prompt1', 'prompt2'],
+    },
+  },
+  {
+    name: 'patterns',
+    description: 'Extract patterns from high-scoring prompts in Langfuse',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        minScore: { type: 'number', description: 'Minimum score threshold', default: 85 },
+        limit: { type: 'number', description: 'Number of prompts to analyze', default: 100 },
+      },
+    },
+  },
+  {
+    name: 'deploy',
+    description: 'Deploy a prompt version to production',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        promptId: { type: 'string', description: 'Prompt ID' },
+        version: { type: 'string', description: 'Version to deploy' },
+        label: { type: 'string', description: 'Deployment label', default: 'production' },
+      },
+      required: ['promptId', 'version'],
+    },
+  },
+];
