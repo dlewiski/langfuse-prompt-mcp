@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+
+/**
+ * Langfuse Prompt MCP Server
+ * 
+ * A Model Context Protocol server for advanced prompt management,
+ * evaluation, and optimization integrated with Langfuse.
+ * 
+ * @module langfuse-prompt-mcp
+ * @version 1.0.0
+ */
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -16,12 +27,25 @@ import { handlePatterns } from './src/handlers/patterns.js';
 import { handleDeploy } from './src/handlers/deploy.js';
 import { handleTrack } from './src/handlers/track.js';
 
-// Server setup
+// Handler mapping for better maintainability
+const TOOL_HANDLERS = {
+  track: handleTrack,
+  evaluate: handleEvaluate,
+  improve: handleImprove,
+  compare: handleCompare,
+  patterns: handlePatterns,
+  deploy: handleDeploy,
+};
+
+// Server configuration
+const SERVER_CONFIG = {
+  name: 'langfuse-prompt',
+  version: '1.0.0',
+};
+
+// Initialize MCP server
 const server = new Server(
-  {
-    name: 'langfuse-prompt',
-    version: '1.0.0',
-  },
+  SERVER_CONFIG,
   {
     capabilities: {
       tools: {},
@@ -34,56 +58,126 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: toolDefinitions };
 });
 
-// Register tool call handler
+/**
+ * Handle tool execution requests
+ * Routes to appropriate handler based on tool name
+ */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  let startTime;
   try {
     const { name, arguments: args } = request.params;
-
-    // Route to appropriate handler
-    switch (name) {
-      case 'track':
-        return await handleTrack(args);
-        
-      case 'evaluate':
-        return await handleEvaluate(args);
-      
-      case 'improve':
-        return await handleImprove(args);
-      
-      case 'compare':
-        return await handleCompare(args);
-      
-      case 'patterns':
-        return await handlePatterns(args);
-      
-      case 'deploy':
-        return await handleDeploy(args);
-      
-      default:
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Unknown tool: ${name}`
-        );
-    }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    
+    // Performance tracking
+    startTime = Date.now();
+    
+    // Validate tool exists
+    const handler = TOOL_HANDLERS[name];
+    if (!handler) {
       throw new McpError(
-        ErrorCode.InvalidParams,
-        `Invalid parameters: ${error.errors.map(e => e.message).join(', ')}`
+        ErrorCode.MethodNotFound,
+        `Unknown tool: ${name}. Available tools: ${Object.keys(TOOL_HANDLERS).join(', ')}`
       );
     }
-    throw error;
+    
+    // Execute handler
+    const result = await handler(args);
+    
+    // Log performance metrics
+    const duration = Date.now() - startTime;
+    if (duration > 1000) {
+      console.error(`[Performance] Tool ${name} took ${duration}ms`);
+    }
+    
+    return result;
+    
+  } catch (error) {
+    // Enhanced error handling with context
+    const duration = startTime ? Date.now() - startTime : 0;
+    
+    if (error instanceof z.ZodError) {
+      const details = error.errors.map(e => 
+        `${e.path.join('.')}: ${e.message}`
+      ).join('; ');
+      
+      console.error(`[Validation Error] Tool: ${request.params.name}, Details: ${details}`);
+      
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        `Invalid parameters: ${details}`
+      );
+    }
+    
+    if (error instanceof McpError) {
+      console.error(`[MCP Error] Code: ${error.code}, Message: ${error.message}`);
+      throw error;
+    }
+    
+    // Log unexpected errors
+    console.error(`[Unexpected Error] Tool: ${request.params.name}, Error:`, error);
+    console.error(`Stack trace:`, error.stack);
+    
+    // Re-throw with context
+    throw new McpError(
+      ErrorCode.InternalError,
+      `Internal error in tool ${request.params.name}: ${error.message}`
+    );
   }
 });
 
-// Start the server
+/**
+ * Initialize and start the MCP server
+ * Sets up stdio transport and handles graceful shutdown
+ */
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('Langfuse Prompt MCP server running');
+  try {
+    const transport = new StdioServerTransport();
+    
+    // Set up graceful shutdown
+    process.on('SIGINT', async () => {
+      console.error('[Server] Shutting down gracefully...');
+      try {
+        await server.close();
+        console.error('[Server] Shutdown complete');
+      } catch (error) {
+        console.error('[Server] Error during shutdown:', error);
+      }
+      process.exit(0);
+    });
+    
+    process.on('SIGTERM', async () => {
+      console.error('[Server] Received SIGTERM, shutting down...');
+      try {
+        await server.close();
+      } catch (error) {
+        console.error('[Server] Error during shutdown:', error);
+      }
+      process.exit(0);
+    });
+    
+    // Connect server to transport
+    await server.connect(transport);
+    console.error(`[Server] Langfuse Prompt MCP server v${SERVER_CONFIG.version} running`);
+    console.error(`[Server] Available tools: ${Object.keys(TOOL_HANDLERS).join(', ')}`);
+    
+  } catch (error) {
+    console.error('[Fatal] Failed to start server:', error);
+    console.error('[Fatal] Stack trace:', error.stack);
+    process.exit(1);
+  }
 }
 
-main().catch((error) => {
-  console.error('Server error:', error);
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('[Fatal] Uncaught exception:', error);
+  console.error('[Fatal] Stack trace:', error.stack);
   process.exit(1);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Fatal] Unhandled rejection at:', promise);
+  console.error('[Fatal] Reason:', reason);
+  process.exit(1);
+});
+
+// Start server
+main();
