@@ -1,0 +1,26 @@
+# Docker Compose override for Langfuse local development
+# This file ensures proper networking and configuration for local Docker deployment
+
+version: '3.8'
+
+services:
+  langfuse-server:
+    environment:
+      # Ensure the server accepts connections from the host
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      # Enable CORS for local development
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+      # Add debug logging
+      - DEBUG=langfuse:*
+      - LOG_LEVEL=debug
+    extra_hosts:
+      # Allow container to connect back to host
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

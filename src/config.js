@@ -53,6 +53,11 @@ export const langfuse = isConfigValid
       // Add timeout and retry configuration
       requestTimeout: parseInt(process.env.LANGFUSE_TIMEOUT) || 30000,
       maxRetries: parseInt(process.env.LANGFUSE_MAX_RETRIES) || 3,
+      // CRITICAL: Set low flush thresholds to ensure events are sent promptly
+      flushAt: parseInt(process.env.LANGFUSE_FLUSH_AT) || 1, // Send after 1 event
+      flushInterval: parseInt(process.env.LANGFUSE_FLUSH_INTERVAL) || 1000, // Flush every 1 second
+      // Enable debug mode if requested
+      debug: process.env.LANGFUSE_DEBUG === "true",
     })
   : null;
 
