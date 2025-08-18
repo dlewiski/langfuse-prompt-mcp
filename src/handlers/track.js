@@ -123,9 +123,16 @@ export async function handleTrack(args) {
       }
     }
     
-    // End trace
-    if (trace && trace.end) {
-      await trace.end();
+    // Note: Traces in Langfuse JS SDK don't have an explicit end() method
+    // They are ended implicitly when flushed
+    
+    // CRITICAL: Flush events to ensure they're sent to Langfuse
+    // This is essential for Docker deployments where the process might exit quickly
+    try {
+      await langfuse.flushAsync();
+    } catch (flushError) {
+      console.error('[Track] Failed to flush events:', flushError.message);
+      // Continue even if flush fails - the trace might still be sent
     }
     
     return {
