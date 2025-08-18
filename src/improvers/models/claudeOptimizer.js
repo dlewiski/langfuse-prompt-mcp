@@ -91,54 +91,104 @@ function transformToXMLStructure(prompt) {
   }
   
   const sections = [];
+  let workingPrompt = prompt;
   
-  // Extract and structure the task
-  const taskMatch = prompt.match(/^(?:Task|Objective|Goal):\s*(.+?)(?:\n|$)/im);
-  if (taskMatch) {
-    sections.push(`<task>\n${taskMatch[1].trim()}\n</task>`);
-    prompt = prompt.replace(taskMatch[0], '');
-  }
+  // Detect if this is a troubleshooting/debugging prompt
+  const isTroubleshooting = /(?:not seeing|not working|issue|problem|error|concern|troubleshoot|debug|fix)/i.test(prompt);
+  const hasLogs = /(?:logs?|output|console|trace|stack)/i.test(prompt);
   
-  // Extract and structure context
-  const contextMatch = prompt.match(/(?:Context|Background|Scenario):\s*(.+?)(?:\n\n|$)/is);
-  if (contextMatch) {
-    sections.push(`<context>\n${contextMatch[1].trim()}\n</context>`);
-    prompt = prompt.replace(contextMatch[0], '');
-  }
-  
-  // Extract and structure requirements
-  const requirementsMatch = prompt.match(/(?:## Requirements?|Requirements?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
-  if (requirementsMatch) {
-    sections.push(`<requirements>\n${requirementsMatch[1].trim()}\n</requirements>`);
-    prompt = prompt.replace(requirementsMatch[0], '');
-  }
-  
-  // Extract and structure constraints
-  const constraintsMatch = prompt.match(/(?:## Constraints?|Constraints?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
-  if (constraintsMatch) {
-    sections.push(`<constraints>\n${constraintsMatch[1].trim()}\n</constraints>`);
-    prompt = prompt.replace(constraintsMatch[0], '');
-  }
-  
-  // Extract and structure examples
-  const examplesMatch = prompt.match(/(?:## Examples?|Examples?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
-  if (examplesMatch) {
-    const examples = examplesMatch[1].trim();
-    sections.push(`<examples>\n${formatExamplesAsXML(examples)}\n</examples>`);
-    prompt = prompt.replace(examplesMatch[0], '');
-  }
-  
-  // Extract and structure output format
-  const outputMatch = prompt.match(/(?:## (?:Expected )?Output|Output Format:)([\s\S]+?)(?=\n##|\n\n|$)/i);
-  if (outputMatch) {
-    sections.push(`<output_format>\n${outputMatch[1].trim()}\n</output_format>`);
-    prompt = prompt.replace(outputMatch[0], '');
-  }
-  
-  // Add any remaining content as instructions
-  const remaining = prompt.trim();
-  if (remaining && remaining.length > 20) {
-    sections.push(`<instructions>\n${remaining}\n</instructions>`);
+  if (isTroubleshooting) {
+    // Extract the problem statement
+    const problemMatch = prompt.match(/^(.+?)(?:\.|:|\n)/);
+    if (problemMatch) {
+      sections.push(`<problem>\n${problemMatch[1].trim()}\n</problem>`);
+      workingPrompt = workingPrompt.replace(problemMatch[0], '');
+    }
+    
+    // Extract logs or debug output
+    if (hasLogs) {
+      const logsMatch = workingPrompt.match(/(?:logs?|output):\s*([\s\S]+?)(?=\n\n|$)/i);
+      if (logsMatch) {
+        sections.push(`<diagnostic_data>\n${logsMatch[1].trim()}\n</diagnostic_data>`);
+        workingPrompt = workingPrompt.replace(logsMatch[0], '');
+      } else if (workingPrompt.includes('|')) {
+        // Likely contains formatted log output
+        const lines = workingPrompt.split('\n');
+        const logLines = lines.filter(line => line.includes('|'));
+        if (logLines.length > 0) {
+          sections.push(`<logs>\n${logLines.join('\n')}\n</logs>`);
+          // Remove log lines from working prompt
+          logLines.forEach(line => {
+            workingPrompt = workingPrompt.replace(line, '');
+          });
+        }
+      }
+    }
+    
+    // Add investigation context
+    sections.push(`<investigation_needed>
+1. Verify connectivity and configuration
+2. Check error logs and debug output
+3. Test individual components
+4. Identify root cause
+5. Implement and verify solution
+</investigation_needed>`);
+    
+    // Add remaining content as additional context
+    const remaining = workingPrompt.trim();
+    if (remaining && remaining.length > 10) {
+      sections.push(`<additional_context>\n${remaining}\n</additional_context>`);
+    }
+  } else {
+    // Original logic for non-troubleshooting prompts
+    // Extract and structure the task
+    const taskMatch = workingPrompt.match(/^(?:Task|Objective|Goal):\s*(.+?)(?:\n|$)/im);
+    if (taskMatch) {
+      sections.push(`<task>\n${taskMatch[1].trim()}\n</task>`);
+      workingPrompt = workingPrompt.replace(taskMatch[0], '');
+    }
+    
+    // Extract and structure context
+    const contextMatch = workingPrompt.match(/(?:Context|Background|Scenario):\s*(.+?)(?:\n\n|$)/is);
+    if (contextMatch) {
+      sections.push(`<context>\n${contextMatch[1].trim()}\n</context>`);
+      workingPrompt = workingPrompt.replace(contextMatch[0], '');
+    }
+    
+    // Extract and structure requirements
+    const requirementsMatch = workingPrompt.match(/(?:## Requirements?|Requirements?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
+    if (requirementsMatch) {
+      sections.push(`<requirements>\n${requirementsMatch[1].trim()}\n</requirements>`);
+      workingPrompt = workingPrompt.replace(requirementsMatch[0], '');
+    }
+    
+    // Extract and structure constraints
+    const constraintsMatch = workingPrompt.match(/(?:## Constraints?|Constraints?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
+    if (constraintsMatch) {
+      sections.push(`<constraints>\n${constraintsMatch[1].trim()}\n</constraints>`);
+      workingPrompt = workingPrompt.replace(constraintsMatch[0], '');
+    }
+    
+    // Extract and structure examples
+    const examplesMatch = workingPrompt.match(/(?:## Examples?|Examples?:)([\s\S]+?)(?=\n##|\n\n|$)/i);
+    if (examplesMatch) {
+      const examples = examplesMatch[1].trim();
+      sections.push(`<examples>\n${formatExamplesAsXML(examples)}\n</examples>`);
+      workingPrompt = workingPrompt.replace(examplesMatch[0], '');
+    }
+    
+    // Extract and structure output format
+    const outputMatch = workingPrompt.match(/(?:## (?:Expected )?Output|Output Format:)([\s\S]+?)(?=\n##|\n\n|$)/i);
+    if (outputMatch) {
+      sections.push(`<output_format>\n${outputMatch[1].trim()}\n</output_format>`);
+      workingPrompt = workingPrompt.replace(outputMatch[0], '');
+    }
+    
+    // Add any remaining content as instructions
+    const remaining = workingPrompt.trim();
+    if (remaining && remaining.length > 20) {
+      sections.push(`<instructions>\n${remaining}\n</instructions>`);
+    }
   }
   
   return sections.join('\n\n');
