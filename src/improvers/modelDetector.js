@@ -6,8 +6,15 @@
 const MODEL_PATTERNS = {
   claude: {
     identifiers: [
-      'claude', 'anthropic', 'sonnet', 'opus', 'haiku',
-      'claude-3', 'claude-4', 'claude-instant'
+      "claude",
+      "anthropic",
+      "sonnet",
+      "opus",
+      "haiku",
+      "claude-3",
+      "claude-4",
+      "opus-4.1",
+      "claude-instant",
     ],
     patterns: [
       /<thinking>/i,
@@ -15,56 +22,70 @@ const MODEL_PATTERNS = {
       /\bArtifact\b/i,
       /\bClaude\b/i,
       /Human:|Assistant:/,
-      /\[THINKING\]/i
+      /\[THINKING\]/i,
     ],
     features: {
       supportsXML: true,
       supportsPrefilling: true,
       supportsThinkingTags: true,
       maxContextWindow: 200000,
-      preferredStructure: 'xml'
-    }
+      preferredStructure: "xml",
+    },
   },
   gpt: {
     identifiers: [
-      'gpt', 'openai', 'chatgpt', 'gpt-4', 'gpt-3.5', 
-      'turbo', 'davinci', 'o1', 'o1-preview'
+      "gpt",
+      "openai",
+      "chatgpt",
+      "gpt-5",
+      "gpt-4",
+      "gpt-3.5",
+      "turbo",
+      "davinci",
+      "o1",
+      "o1-preview",
     ],
     patterns: [
       /system.*message/i,
       /function[_\s]calling/i,
       /response_format/i,
       /\btools\b.*\bfunction\b/i,
-      /temperature.*top_p/i
+      /temperature.*top_p/i,
     ],
     features: {
       supportsSystemMessage: true,
       supportsFunctionCalling: true,
       supportsResponseFormat: true,
       maxContextWindow: 128000,
-      preferredStructure: 'json'
-    }
+      preferredStructure: "json",
+    },
   },
   gemini: {
     identifiers: [
-      'gemini', 'google', 'bard', 'palm', 'vertex',
-      'gemini-pro', 'gemini-ultra', 'gemini-flash'
+      "gemini",
+      "google",
+      "bard",
+      "palm",
+      "vertex",
+      "gemini-pro",
+      "gemini-ultra",
+      "gemini-flash",
     ],
     patterns: [
       /safety[_\s]settings/i,
       /grounding/i,
       /context[_\s]caching/i,
       /harm[_\s]category/i,
-      /\bgemini\b/i
+      /\bgemini\b/i,
     ],
     features: {
       supportsGrounding: true,
       supportsContextCaching: true,
       supportsSafetySettings: true,
       maxContextWindow: 2000000,
-      preferredStructure: 'markdown'
-    }
-  }
+      preferredStructure: "markdown",
+    },
+  },
 };
 
 /**
@@ -75,19 +96,19 @@ const MODEL_PATTERNS = {
  * @param {Object} [params.metadata] - Additional metadata
  * @returns {Object} Detection result with model info and confidence
  */
-function detectModel({ prompt = '', model = '', metadata = {} }) {
+function detectModel({ prompt = "", model = "", metadata = {} }) {
   const results = {
     detectedModel: null,
     confidence: 0,
     features: {},
-    reasoning: []
+    reasoning: [],
   };
 
   // Check explicit model specification first
   if (model) {
     const normalizedModel = model.toLowerCase();
     for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
-      if (config.identifiers.some(id => normalizedModel.includes(id))) {
+      if (config.identifiers.some((id) => normalizedModel.includes(id))) {
         results.detectedModel = modelKey;
         results.confidence = 0.95;
         results.features = config.features;
@@ -99,9 +120,13 @@ function detectModel({ prompt = '', model = '', metadata = {} }) {
 
   // Check metadata for model hints
   if (metadata.model || metadata.provider || metadata.engine) {
-    const metaModel = (metadata.model || metadata.provider || metadata.engine).toLowerCase();
+    const metaModel = (
+      metadata.model ||
+      metadata.provider ||
+      metadata.engine
+    ).toLowerCase();
     for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
-      if (config.identifiers.some(id => metaModel.includes(id))) {
+      if (config.identifiers.some((id) => metaModel.includes(id))) {
         results.detectedModel = modelKey;
         results.confidence = 0.9;
         results.features = config.features;
@@ -113,35 +138,39 @@ function detectModel({ prompt = '', model = '', metadata = {} }) {
 
   // Pattern-based detection from prompt content
   const scores = {};
-  
+
   for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
     scores[modelKey] = 0;
-    
+
     // Check for identifier keywords
-    const identifierMatches = config.identifiers.filter(id => 
+    const identifierMatches = config.identifiers.filter((id) =>
       prompt.toLowerCase().includes(id)
     );
     scores[modelKey] += identifierMatches.length * 0.3;
-    
+
     if (identifierMatches.length > 0) {
-      results.reasoning.push(`Found ${modelKey} identifiers: ${identifierMatches.join(', ')}`);
+      results.reasoning.push(
+        `Found ${modelKey} identifiers: ${identifierMatches.join(", ")}`
+      );
     }
-    
+
     // Check for pattern matches
-    const patternMatches = config.patterns.filter(pattern => 
+    const patternMatches = config.patterns.filter((pattern) =>
       pattern.test(prompt)
     );
     scores[modelKey] += patternMatches.length * 0.2;
-    
+
     if (patternMatches.length > 0) {
-      results.reasoning.push(`Matched ${modelKey} patterns: ${patternMatches.length} patterns`);
+      results.reasoning.push(
+        `Matched ${modelKey} patterns: ${patternMatches.length} patterns`
+      );
     }
   }
 
   // Find the highest scoring model
   let maxScore = 0;
   let detectedModel = null;
-  
+
   for (const [modelKey, score] of Object.entries(scores)) {
     if (score > maxScore) {
       maxScore = score;
@@ -155,14 +184,16 @@ function detectModel({ prompt = '', model = '', metadata = {} }) {
     results.features = MODEL_PATTERNS[detectedModel].features;
   } else {
     // Default to generic optimization if no specific model detected
-    results.detectedModel = 'generic';
+    results.detectedModel = "generic";
     results.confidence = 0.3;
     results.features = {
       supportsMarkdown: true,
       supportsJSON: true,
-      preferredStructure: 'markdown'
+      preferredStructure: "markdown",
     };
-    results.reasoning.push('No specific model detected, using generic optimization');
+    results.reasoning.push(
+      "No specific model detected, using generic optimization"
+    );
   }
 
   return results;
@@ -175,17 +206,17 @@ function detectModel({ prompt = '', model = '', metadata = {} }) {
  */
 function getModelFeatures(modelName) {
   const normalizedName = modelName.toLowerCase();
-  
+
   for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
-    if (config.identifiers.some(id => normalizedName.includes(id))) {
+    if (config.identifiers.some((id) => normalizedName.includes(id))) {
       return config.features;
     }
   }
-  
+
   return {
     supportsMarkdown: true,
     supportsJSON: true,
-    preferredStructure: 'markdown'
+    preferredStructure: "markdown",
   };
 }
 
@@ -197,19 +228,19 @@ function getModelFeatures(modelName) {
  */
 function isTechniqueSuitable(model, technique) {
   const features = getModelFeatures(model);
-  
+
   const techniqueRequirements = {
-    xmlStructure: 'supportsXML',
-    thinkingTags: 'supportsThinkingTags',
-    prefilling: 'supportsPrefilling',
-    systemMessage: 'supportsSystemMessage',
-    functionCalling: 'supportsFunctionCalling',
-    responseFormat: 'supportsResponseFormat',
-    grounding: 'supportsGrounding',
-    contextCaching: 'supportsContextCaching',
-    safetySettings: 'supportsSafetySettings'
+    xmlStructure: "supportsXML",
+    thinkingTags: "supportsThinkingTags",
+    prefilling: "supportsPrefilling",
+    systemMessage: "supportsSystemMessage",
+    functionCalling: "supportsFunctionCalling",
+    responseFormat: "supportsResponseFormat",
+    grounding: "supportsGrounding",
+    contextCaching: "supportsContextCaching",
+    safetySettings: "supportsSafetySettings",
   };
-  
+
   const requirement = techniqueRequirements[technique];
   return requirement ? features[requirement] === true : true;
 }
@@ -218,5 +249,5 @@ module.exports = {
   detectModel,
   getModelFeatures,
   isTechniqueSuitable,
-  MODEL_PATTERNS
+  MODEL_PATTERNS,
 };
