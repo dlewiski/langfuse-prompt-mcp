@@ -6,13 +6,51 @@
 
 import { IMPROVEMENT } from '../constants.js';
 
+interface ImprovedVersion {
+  text: string;
+  score: number;
+  techniquesApplied: string[];
+  note?: string;
+}
+
+interface PromptVersion {
+  text: string;
+  score: number;
+}
+
+interface Evaluation {
+  overallScore?: number;
+  scores?: Record<string, any>;
+  recommendations?: any[];
+  improvements?: any[];
+}
+
+interface ImprovementResult {
+  original: {
+    text: string;
+    score: number;
+  };
+  improved: {
+    text: string;
+    score: number;
+    techniquesApplied: string[];
+  };
+  improvement: number;
+  recommendations: any[];
+}
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
 /**
  * Calculate estimated score based on techniques applied
  * @param {number} baseScore - Original score
  * @param {number} techniqueCount - Number of techniques applied
  * @returns {number} Estimated score
  */
-export function calculateEstimatedScore(baseScore, techniqueCount) {
+export function calculateEstimatedScore(baseScore: number, techniqueCount: number): number {
   const score = (baseScore || 50) + (techniqueCount * IMPROVEMENT.SCORE_PER_TECHNIQUE);
   return Math.min(IMPROVEMENT.MAX_SCORE, score);
 }
@@ -23,7 +61,7 @@ export function calculateEstimatedScore(baseScore, techniqueCount) {
  * @param {number} score - Prompt score
  * @returns {Object} Version object
  */
-export function createPromptVersion(text, score) {
+export function createPromptVersion(text: string, score: number): PromptVersion {
   return {
     text,
     score: score || 0,
@@ -38,8 +76,13 @@ export function createPromptVersion(text, score) {
  * @param {string|null} note - Optional note
  * @returns {Object} Improved version object
  */
-export function createImprovedVersion(text, score, techniquesApplied, note = null) {
-  const version = {
+export function createImprovedVersion(
+  text: string, 
+  score: number, 
+  techniquesApplied: string[], 
+  note: string | null = null
+): ImprovedVersion {
+  const version: ImprovedVersion = {
     text,
     score: score || 0,
     techniquesApplied,
@@ -57,7 +100,7 @@ export function createImprovedVersion(text, score, techniquesApplied, note = nul
  * @param {Object} evaluation - Evaluation result
  * @returns {Object} Formatted evaluation
  */
-export function formatEvaluation(evaluation) {
+export function formatEvaluation(evaluation: Evaluation): any {
   return {
     overallScore: evaluation.overallScore || 0,
     scores: evaluation.scores || {},
@@ -73,7 +116,11 @@ export function formatEvaluation(evaluation) {
  * @param {Array} techniquesApplied - Techniques applied
  * @returns {Object} Improvement result
  */
-export function createImprovementResult(original, improved, techniquesApplied) {
+export function createImprovementResult(
+  original: any, 
+  improved: any, 
+  techniquesApplied: string[]
+): ImprovementResult {
   return {
     original: {
       text: original.text,
@@ -95,7 +142,7 @@ export function createImprovementResult(original, improved, techniquesApplied) {
  * @param {number} targetScore - Target score (default: 85)
  * @returns {boolean} True if score meets threshold
  */
-export function meetsImprovementThreshold(score, targetScore = 85) {
+export function meetsImprovementThreshold(score: number, targetScore: number = 85): boolean {
   return score >= targetScore;
 }
 
@@ -105,7 +152,7 @@ export function meetsImprovementThreshold(score, targetScore = 85) {
  * @param {Array} required - Required field names
  * @returns {Object} Validation result
  */
-export function validateArgs(args, required = []) {
+export function validateArgs(args: any, required: string[] = []): ValidationResult {
   const missing = required.filter(field => !args[field]);
   
   if (missing.length > 0) {

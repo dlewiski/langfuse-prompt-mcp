@@ -8,19 +8,29 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
+import type { MCPResponseWithContent } from '../utils/response.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
 const PROMPTS_DIR = path.join(ROOT_DIR, '.prompts');
 
-export async function handleSave(args) {
+interface SaveArgs {
+  originalPrompt?: string;
+  improvedPrompt?: string;
+  originalScore?: number;
+  improvedScore?: number;
+  techniquesApplied?: string[];
+  filename?: string;
+}
+
+export async function handleSave(args: SaveArgs): Promise<MCPResponseWithContent> {
   const { 
-    originalPrompt,
-    improvedPrompt,
+    originalPrompt = '',
+    improvedPrompt = '',
     originalScore,
     improvedScore,
-    techniquesApplied,
+    techniquesApplied = [],
     filename
   } = args;
 
@@ -56,12 +66,12 @@ export async function handleSave(args) {
   } catch (error) {
     handlerLogger.error('Error saving prompt:', error);
     return errorResponse('Failed to save prompt', {
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 }
 
-function generateFilename(prompt) {
+function generateFilename(prompt: string): string {
   // Extract a meaningful title from the prompt
   const cleanTitle = prompt
     .slice(0, 50)
@@ -73,12 +83,20 @@ function generateFilename(prompt) {
   return `${cleanTitle}-${timestamp}.md`;
 }
 
-function createMarkdownContent(data) {
+interface MarkdownData {
+  originalPrompt: string;
+  improvedPrompt: string;
+  originalScore?: number;
+  improvedScore?: number;
+  techniquesApplied: string[];
+}
+
+function createMarkdownContent(data: MarkdownData): string {
   const {
     originalPrompt,
     improvedPrompt,
-    originalScore = 'N/A',
-    improvedScore = 'N/A',
+    originalScore,
+    improvedScore,
     techniquesApplied = []
   } = data;
   
@@ -90,8 +108,8 @@ function createMarkdownContent(data) {
 
 ## Summary
 - **Date**: ${new Date().toISOString()}
-- **Original Score**: ${originalScore}
-- **Improved Score**: ${improvedScore}
+- **Original Score**: ${originalScore ?? 'N/A'}
+- **Improved Score**: ${improvedScore ?? 'N/A'}
 - **Improvement**: ${improvement}
 - **Techniques Applied**: ${techniquesApplied.join(', ') || 'None'}
 

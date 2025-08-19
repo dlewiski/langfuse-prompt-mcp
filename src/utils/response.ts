@@ -23,7 +23,7 @@ interface MCPContent {
 /**
  * MCP response with content
  */
-interface MCPResponseWithContent {
+export interface MCPResponseWithContent {
   content: MCPContent[];
 }
 

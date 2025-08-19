@@ -11,7 +11,13 @@ import { Langfuse } from 'langfuse';
 import dotenv from 'dotenv';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { configLogger } from './utils/logger.js';
+// Avoid circular dependency - use console directly for config logging
+const configLogger = {
+  info: (msg: string) => console.log(`[CONFIG INFO] ${msg}`),
+  warn: (msg: string) => console.warn(`[CONFIG WARN] ${msg}`),
+  error: (msg: string) => console.error(`[CONFIG ERROR] ${msg}`),
+  debug: (msg: string) => console.log(`[CONFIG DEBUG] ${msg}`)
+};
 import { DEFAULTS, CRITERIA_WEIGHTS } from './constants.js';
 import type { LangfuseClient } from './types/langfuse.js';
 import type { EvaluationCriterion, TargetModel } from './types/domain.js';
@@ -66,16 +72,23 @@ const envPath = join(process.env.HOME || '', '.claude', '.env');
 // Load environment variables with validation
 if (existsSync(envPath)) {
   dotenv.config({ path: envPath });
-  configLogger.info(`Loaded environment from ${envPath}`);
+  // Logging will be done in validateConfig
 } else {
-  configLogger.warn(`Environment file not found at ${envPath}`);
-  configLogger.warn('Using environment variables or defaults');
+  // Logging will be done in validateConfig
 }
 
 /**
  * Validate required environment variables
  */
 const validateConfig = (): boolean => {
+  // Log environment loading status
+  if (existsSync(envPath)) {
+    configLogger.info(`Loaded environment from ${envPath}`);
+  } else {
+    configLogger.warn(`Environment file not found at ${envPath}`);
+    configLogger.warn('Using environment variables or defaults');
+  }
+
   const required = ['LANGFUSE_PUBLIC_KEY', 'LANGFUSE_SECRET_KEY'];
   const missing = required.filter((key) => !process.env[key]);
 

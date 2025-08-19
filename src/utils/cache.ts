@@ -3,16 +3,26 @@
  * @module utils/cache
  */
 
+interface CacheOptions {
+  maxSize?: number;
+  ttl?: number;
+}
+
 /**
  * Cache implementation with TTL and size limits
  */
 export class Cache {
+  private maxSize: number;
+  private ttl: number;
+  private cache: Map<string, any>;
+  private timestamps: Map<string, number>;
+
   /**
    * @param {Object} options - Cache configuration
    * @param {number} options.maxSize - Maximum number of entries
    * @param {number} options.ttl - Time to live in milliseconds
    */
-  constructor(options = {}) {
+  constructor(options: CacheOptions = {}) {
     this.maxSize = options.maxSize || 100;
     this.ttl = options.ttl || 3600000; // 1 hour default
     this.cache = new Map();
@@ -24,12 +34,15 @@ export class Cache {
    * @param {string} key - Cache key
    * @returns {any} Cached value or undefined
    */
-  get(key) {
+  get(key: string): any {
     if (!this.cache.has(key)) {
       return undefined;
     }
 
     const timestamp = this.timestamps.get(key);
+    if (!timestamp) {
+      return undefined;
+    }
     const age = Date.now() - timestamp;
 
     // Check if expired
@@ -51,64 +64,53 @@ export class Cache {
    * @param {string} key - Cache key
    * @param {any} value - Value to cache
    */
-  set(key, value) {
+  set(key: string, value: any): void {
     // Remove oldest if at capacity
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
       const firstKey = this.cache.keys().next().value;
       this.delete(firstKey);
     }
 
-    // Update or add
     this.cache.set(key, value);
     this.timestamps.set(key, Date.now());
   }
 
   /**
-   * Delete entry from cache
+   * Delete from cache
    * @param {string} key - Cache key
-   * @returns {boolean} True if deleted
    */
-  delete(key) {
+  delete(key: string): void {
+    this.cache.delete(key);
     this.timestamps.delete(key);
-    return this.cache.delete(key);
   }
 
   /**
-   * Clear all cache entries
+   * Clear entire cache
    */
-  clear() {
+  clear(): void {
     this.cache.clear();
     this.timestamps.clear();
   }
 
   /**
    * Get cache size
-   * @returns {number} Number of entries
+   * @returns {number} Number of cached entries
    */
-  get size() {
+  size(): number {
     return this.cache.size;
   }
 
   /**
-   * Clean expired entries
-   * @returns {number} Number of entries removed
+   * Check if key exists
+   * @param {string} key - Cache key
+   * @returns {boolean} True if key exists and not expired
    */
-  cleanExpired() {
-    const now = Date.now();
-    let removed = 0;
-
-    for (const [key, timestamp] of this.timestamps.entries()) {
-      if (now - timestamp > this.ttl) {
-        this.delete(key);
-        removed++;
-      }
-    }
-
-    return removed;
+  has(key: string): boolean {
+    return this.get(key) !== undefined;
   }
 }
 
-// Singleton caches for different purposes
-export const evaluationCache = new Cache({ maxSize: 50, ttl: 600000 }); // 10 min
-export const patternCache = new Cache({ maxSize: 20, ttl: 1800000 }); // 30 min
-export const categoryCache = new Cache({ maxSize: 200, ttl: 3600000 }); // 1 hour
+// Default cache instances
+export const evaluationCache = new Cache({ maxSize: 500, ttl: 3600000 });
+export const improvementCache = new Cache({ maxSize: 200, ttl: 7200000 });
+export const patternCache = new Cache({ maxSize: 50, ttl: 86400000 });

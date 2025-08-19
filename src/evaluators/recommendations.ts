@@ -1,8 +1,21 @@
 import { needsImprovement } from '../utils/scoring.js';
 import { SCORE_THRESHOLDS } from '../constants.js';
 
-export function generateRecommendations(scores) {
-  const recommendations = [];
+interface ScoreData {
+  score: number;
+  weighted: number;
+}
+
+interface Recommendation {
+  criterion: string;
+  currentScore: number;
+  recommendation: string;
+  impact: string;
+  impactScore: number;
+}
+
+export function generateRecommendations(scores: Record<string, ScoreData>): Recommendation[] {
+  const recommendations: Recommendation[] = [];
   
   for (const [criterion, data] of Object.entries(scores)) {
     if (needsImprovement(data.score)) {
@@ -21,7 +34,7 @@ export function generateRecommendations(scores) {
   return recommendations.sort((a, b) => b.impactScore - a.impactScore);
 }
 
-export function getRecommendation(criterion) {
+export function getRecommendation(criterion: string): string {
   const recommendations = {
     clarity: 'Add explicit requirements using "MUST", "SHOULD", and "MAY". Be specific about expected behavior.',
     structure: 'Use XML tags or markdown sections to organize your prompt. Add clear hierarchical structure.',
