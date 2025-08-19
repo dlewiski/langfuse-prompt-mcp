@@ -1,102 +1,175 @@
-// Individual criterion evaluators
+/**
+ * Individual criterion evaluators
+ * 
+ * Each function evaluates a specific aspect of prompt quality
+ * and returns a normalized score between 0 and 1.
+ */
+
+import {
+  SCORING,
+  CLARITY_PATTERNS,
+  STRUCTURE_PATTERNS,
+  EXAMPLE_PATTERNS,
+  CHAIN_PATTERNS,
+  TECH_PATTERNS,
+  ERROR_PATTERNS,
+  PERF_PATTERNS,
+  TEST_PATTERNS,
+  FORMAT_PATTERNS,
+  DEPLOY_PATTERNS,
+} from './constants.js';
 
 export function evaluateClarity(prompt) {
-  let score = 0.5; // Base score
+  let score = SCORING.BASE.CLARITY;
   
-  if (prompt.includes('MUST') || prompt.includes('REQUIRED')) score += 0.2;
-  if (prompt.includes('specifically') || prompt.includes('exactly')) score += 0.1;
-  if (prompt.length > 100 && prompt.length < 2000) score += 0.1;
-  if (!/\?{2,}/.test(prompt)) score += 0.1; // No multiple question marks
+  if (CLARITY_PATTERNS.REQUIREMENT_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
+  if (CLARITY_PATTERNS.SPECIFICITY_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
+  if (prompt.length > CLARITY_PATTERNS.OPTIMAL_LENGTH.MIN && 
+      prompt.length < CLARITY_PATTERNS.OPTIMAL_LENGTH.MAX) {
+    score += SCORING.INCREMENT.SMALL;
+  }
+  if (!CLARITY_PATTERNS.MULTIPLE_QUESTIONS.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateStructure(prompt) {
-  let score = 0.3;
+  let score = SCORING.BASE.STRUCTURE;
   
-  if (/<\w+>.*<\/\w+>/s.test(prompt)) score += 0.3; // XML tags
-  if (/#{1,3}\s+.+/m.test(prompt)) score += 0.2; // Markdown headers
-  if (/^\d+\.\s+.+/m.test(prompt)) score += 0.1; // Numbered lists
-  if (/^[-*]\s+.+/m.test(prompt)) score += 0.1; // Bullet points
+  if (STRUCTURE_PATTERNS.XML_TAGS.test(prompt)) {
+    score += SCORING.INCREMENT.LARGE;
+  }
+  if (STRUCTURE_PATTERNS.MARKDOWN_HEADERS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
+  if (STRUCTURE_PATTERNS.NUMBERED_LISTS.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
+  if (STRUCTURE_PATTERNS.BULLET_POINTS.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateExamples(prompt) {
-  const exampleMatches = prompt.match(/<example>|Example:|For example|e\.g\./gi);
+  const exampleMatches = prompt.match(EXAMPLE_PATTERNS.INDICATORS);
   const count = exampleMatches ? exampleMatches.length : 0;
   
-  if (count === 0) return 0.2;
-  if (count === 1) return 0.6;
-  if (count === 2 || count === 3) return 1.0;
-  return 0.8; // Too many examples
+  const { NONE, ONE, OPTIMAL, TOO_MANY } = EXAMPLE_PATTERNS.SCORE_BY_COUNT;
+  
+  if (count === NONE.count) return NONE.score;
+  if (count === ONE.count) return ONE.score;
+  if (count >= OPTIMAL.min && count <= OPTIMAL.max) return OPTIMAL.score;
+  return TOO_MANY.score;
 }
 
 export function evaluateChainOfThought(prompt) {
-  let score = 0.2;
+  let score = SCORING.BASE.CHAIN_OF_THOUGHT;
   
-  if (/<thinking>|Let me think|step by step/i.test(prompt)) score += 0.4;
-  if (/First,.*Then,.*Finally,/is.test(prompt)) score += 0.2;
-  if (/reasoning|approach|consider/i.test(prompt)) score += 0.2;
+  if (CHAIN_PATTERNS.THINKING_TAGS.test(prompt)) {
+    score += SCORING.INCREMENT.EXTRA_LARGE;
+  }
+  if (CHAIN_PATTERNS.SEQUENTIAL_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
+  if (CHAIN_PATTERNS.REASONING_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateTechSpecificity(prompt) {
-  let score = 0.3;
-  const techTerms = /React|FastAPI|TypeScript|Python|API|component|endpoint|database/gi;
-  const matches = prompt.match(techTerms);
+  let score = SCORING.BASE.TECH_SPECIFICITY;
+  const matches = prompt.match(TECH_PATTERNS.TECH_TERMS);
   
-  if (matches && matches.length > 3) score += 0.4;
-  if (/version|v\d+|\d+\.\d+/i.test(prompt)) score += 0.1;
-  if (/framework|library|package/i.test(prompt)) score += 0.2;
+  if (matches && matches.length > TECH_PATTERNS.MIN_TECH_TERMS) {
+    score += SCORING.INCREMENT.EXTRA_LARGE;
+  }
+  if (TECH_PATTERNS.VERSION_INDICATORS.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
+  if (TECH_PATTERNS.FRAMEWORK_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateErrorHandling(prompt) {
-  let score = 0.2;
+  let score = SCORING.BASE.ERROR_HANDLING;
   
-  if (/error|exception|failure|edge case/i.test(prompt)) score += 0.4;
-  if (/try|catch|handle|recover/i.test(prompt)) score += 0.2;
-  if (/validation|sanitize|verify/i.test(prompt)) score += 0.2;
+  if (ERROR_PATTERNS.ERROR_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.EXTRA_LARGE;
+  }
+  if (ERROR_PATTERNS.HANDLING_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
+  if (ERROR_PATTERNS.VALIDATION_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluatePerformance(prompt) {
-  let score = 0.5;
+  let score = SCORING.BASE.PERFORMANCE;
   
-  if (/performance|optimize|efficient|fast/i.test(prompt)) score += 0.3;
-  if (/cache|lazy|async|concurrent/i.test(prompt)) score += 0.2;
+  if (PERF_PATTERNS.PERFORMANCE_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.LARGE;
+  }
+  if (PERF_PATTERNS.OPTIMIZATION_TECHNIQUES.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateTesting(prompt) {
-  let score = 0.3;
+  let score = SCORING.BASE.TESTING;
   
-  if (/test|testing|unit test|integration/i.test(prompt)) score += 0.4;
-  if (/coverage|assertion|mock/i.test(prompt)) score += 0.3;
+  if (TEST_PATTERNS.TEST_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.EXTRA_LARGE;
+  }
+  if (TEST_PATTERNS.TEST_CONCEPTS.test(prompt)) {
+    score += SCORING.INCREMENT.LARGE;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateOutputFormat(prompt) {
-  let score = 0.4;
+  let score = SCORING.BASE.OUTPUT_FORMAT;
   
-  if (/format|structure|output|return/i.test(prompt)) score += 0.3;
-  if (/JSON|XML|markdown|code/i.test(prompt)) score += 0.2;
-  if (/<output>|```/g.test(prompt)) score += 0.1;
+  if (FORMAT_PATTERNS.FORMAT_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.LARGE;
+  }
+  if (FORMAT_PATTERNS.FORMAT_TYPES.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
+  if (FORMAT_PATTERNS.FORMAT_EXAMPLES.test(prompt)) {
+    score += SCORING.INCREMENT.SMALL;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }
 
 export function evaluateDeployment(prompt) {
-  let score = 0.5;
+  let score = SCORING.BASE.DEPLOYMENT;
   
-  if (/deploy|production|environment|docker/i.test(prompt)) score += 0.3;
-  if (/security|authentication|authorization/i.test(prompt)) score += 0.2;
+  if (DEPLOY_PATTERNS.DEPLOYMENT_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.LARGE;
+  }
+  if (DEPLOY_PATTERNS.SECURITY_WORDS.test(prompt)) {
+    score += SCORING.INCREMENT.MEDIUM;
+  }
   
-  return Math.min(score, 1.0);
+  return Math.min(score, SCORING.MAX_SCORE);
 }

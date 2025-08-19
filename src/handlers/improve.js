@@ -4,28 +4,72 @@ import { applyImprovements } from "../improvers/index.js";
 import { optimizePrompt } from "../improvers/modelOptimizer.js";
 import { successResponse, errorResponse, llmTaskResponse, isLLMTaskResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
-import { IMPROVEMENT, LLM_ACTIONS } from '../constants.js';
+import { 
+  calculateEstimatedScore,
+  createPromptVersion,
+  createImprovedVersion,
+  createImprovementResult,
+} from './helpers.js';
+
+/**
+ * Apply model optimization if enabled
+ */
+async function applyModelOptimization(prompt, options) {
+  const { targetModel, techniques, enableModelOptimization } = options;
+  
+  if (enableModelOptimization === false) {
+    return { prompt, optimizationApplied: false };
+  }
+  
+  const result = await optimizePrompt(prompt, {
+    targetModel,
+    applyBase: true,
+    complexity: techniques?.includes("chainOfThought") ? "high" : "medium",
+  });
+  
+  return {
+    prompt: result.optimized,
+    optimizationApplied: true,
+    optimizationResult: result,
+  };
+}
+
+/**
+ * Handle LLM evaluation response
+ */
+function handleLLMEvaluation(evaluation, improved, originalScore) {
+  const estimatedScore = calculateEstimatedScore(
+    originalScore,
+    improved.techniquesApplied.length
+  );
+  
+  return successResponse({
+    original: createPromptVersion(improved.originalText, originalScore),
+    improved: createImprovedVersion(
+      improved.text,
+      estimatedScore,
+      improved.techniquesApplied,
+      "Score estimated based on techniques applied"
+    ),
+    improvement: estimatedScore - (originalScore || 0),
+    recommendations: improved.recommendations || [],
+  });
+}
 
 export async function handleImprove(args) {
-  const { prompt, promptId, techniques, targetModel, enableModelOptimization } =
-    ImproveSchema.parse(args);
+  const parsed = ImproveSchema.parse(args);
+  const { prompt, promptId, techniques, targetModel, enableModelOptimization } = parsed;
 
   try {
-    // Apply model-specific optimization if enabled
-    let workingPrompt = prompt;
-    let modelOptimizationResult = null;
+    // Step 1: Apply model-specific optimization if enabled
+    const { prompt: workingPrompt } = await applyModelOptimization(prompt, {
+      targetModel,
+      techniques,
+      enableModelOptimization,
+    });
 
-    if (enableModelOptimization !== false) {
-      modelOptimizationResult = await optimizePrompt(prompt, {
-        targetModel,
-        applyBase: true,
-        complexity: techniques?.includes("chainOfThought") ? "high" : "medium",
-      });
-      workingPrompt = modelOptimizationResult.optimized;
-    }
-
-    // First evaluate the current prompt
-    const evaluation = await evaluatePrompt(prompt);
+    // Step 2: Evaluate the current prompt
+    const evaluation = await evaluatePrompt(workingPrompt);
 
     // Check if this is an LLM evaluation request
     if (isLLMTaskResponse(evaluation)) {
@@ -36,43 +80,30 @@ export async function handleImprove(args) {
       );
     }
 
-    // Apply improvements based on evaluation
-    const improved = await applyImprovements(prompt, evaluation, techniques);
+    // Step 3: Apply improvements based on evaluation
+    const improved = await applyImprovements(workingPrompt, evaluation, techniques);
+    improved.originalText = prompt; // Keep reference to original
 
-    // Evaluate the improved version
+    // Step 4: Evaluate the improved version
     const improvedEvaluation = await evaluatePrompt(improved.text);
 
     // Handle LLM evaluation for improved version with fallback
     if (isLLMTaskResponse(improvedEvaluation)) {
-      const estimatedScore = calculateEstimatedScore(
-        evaluation.overallScore,
-        improved.techniquesApplied.length
-      );
-
-      return successResponse({
-        original: createPromptVersion(prompt, evaluation.overallScore),
-        improved: createImprovedVersion(
-          improved.text,
-          estimatedScore,
-          improved.techniquesApplied,
-          "Score estimated based on techniques applied"
-        ),
-        improvement: estimatedScore - (evaluation.overallScore || 0),
-        recommendations: evaluation.recommendations || [],
-      });
+      return handleLLMEvaluation(evaluation, improved, evaluation.overallScore);
     }
 
-    // Regular response with actual evaluation scores
-    return successResponse({
-      original: createPromptVersion(prompt, evaluation.overallScore),
-      improved: createImprovedVersion(
-        improved.text,
-        improvedEvaluation.overallScore,
+    // Step 5: Return improvement result
+    return successResponse(
+      createImprovementResult(
+        { text: prompt, score: evaluation.overallScore },
+        { 
+          text: improved.text, 
+          score: improvedEvaluation.overallScore,
+          recommendations: improvedEvaluation.recommendations,
+        },
         improved.techniquesApplied
-      ),
-      improvement: (improvedEvaluation.overallScore || 0) - (evaluation.overallScore || 0),
-      recommendations: improvedEvaluation.recommendations || [],
-    });
+      )
+    );
 
   } catch (error) {
     handlerLogger.error("Error in handleImprove:", error.message);
@@ -83,37 +114,3 @@ export async function handleImprove(args) {
   }
 }
 
-/**
- * Calculate estimated score based on techniques applied
- */
-function calculateEstimatedScore(baseScore, techniqueCount) {
-  const score = (baseScore || 50) + (techniqueCount * IMPROVEMENT.SCORE_PER_TECHNIQUE);
-  return Math.min(IMPROVEMENT.MAX_SCORE, score);
-}
-
-/**
- * Create prompt version object
- */
-function createPromptVersion(text, score) {
-  return {
-    text,
-    score: score || 0,
-  };
-}
-
-/**
- * Create improved version object
- */
-function createImprovedVersion(text, score, techniquesApplied, note = null) {
-  const version = {
-    text,
-    score: score || 0,
-    techniquesApplied,
-  };
-  
-  if (note) {
-    version.note = note;
-  }
-  
-  return version;
-}
