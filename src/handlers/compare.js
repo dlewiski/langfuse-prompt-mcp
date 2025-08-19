@@ -1,5 +1,7 @@
 import { CompareSchema } from '../tools/schemas.js';
 import { evaluatePrompt } from '../evaluators/index.js';
+import { successResponse } from '../utils/response.js';
+import { SCORE_THRESHOLDS } from '../constants.js';
 
 export async function handleCompare(args) {
   const { prompt1, prompt2, promptId } = CompareSchema.parse(args);
@@ -27,17 +29,14 @@ export async function handleCompare(args) {
     detailedComparison: compareScores(eval1.scores, eval2.scores),
   };
   
-  return {
-    content: [{
-      type: 'text',
-      text: JSON.stringify(comparison, null, 2)
-    }]
-  };
+  return successResponse(comparison);
 }
 
 function getStrengths(scores) {
+  if (!scores) return [];
+  
   return Object.entries(scores)
-    .filter(([_, data]) => data.score >= 0.8)
+    .filter(([_, data]) => data && data.score >= SCORE_THRESHOLDS.GOOD)
     .map(([criterion, data]) => ({
       criterion,
       score: data.score,
@@ -46,8 +45,10 @@ function getStrengths(scores) {
 }
 
 function getWeaknesses(scores) {
+  if (!scores) return [];
+  
   return Object.entries(scores)
-    .filter(([_, data]) => data.score < 0.6)
+    .filter(([_, data]) => data && data.score < SCORE_THRESHOLDS.WEAK)
     .map(([criterion, data]) => ({
       criterion,
       score: data.score,
@@ -58,14 +59,21 @@ function getWeaknesses(scores) {
 function compareScores(scores1, scores2) {
   const comparison = {};
   
+  // Handle cases where scores might be undefined
+  if (!scores1 || !scores2) {
+    return comparison;
+  }
+  
   for (const criterion of Object.keys(scores1)) {
-    const diff = scores2[criterion].score - scores1[criterion].score;
-    comparison[criterion] = {
-      version1: scores1[criterion].score,
-      version2: scores2[criterion].score,
-      difference: diff,
-      improved: diff > 0,
-    };
+    if (scores2[criterion]) {
+      const diff = scores2[criterion].score - scores1[criterion].score;
+      comparison[criterion] = {
+        version1: scores1[criterion].score,
+        version2: scores2[criterion].score,
+        difference: diff,
+        improved: diff > 0,
+      };
+    }
   }
   
   return comparison;

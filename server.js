@@ -26,6 +26,8 @@ import { handleCompare } from './src/handlers/compare.js';
 import { handlePatterns } from './src/handlers/patterns.js';
 import { handleDeploy } from './src/handlers/deploy.js';
 import { handleTrack } from './src/handlers/track.js';
+import { serverLogger } from './src/utils/logger.js';
+import { PERFORMANCE } from './src/constants.js';
 
 // Handler mapping for better maintainability
 const TOOL_HANDLERS = {
@@ -63,12 +65,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  * Routes to appropriate handler based on tool name
  */
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  let startTime;
+  const timer = serverLogger.timer(`Tool: ${request.params.name}`);
+  
   try {
     const { name, arguments: args } = request.params;
-    
-    // Performance tracking
-    startTime = Date.now();
     
     // Validate tool exists
     const handler = TOOL_HANDLERS[name];
@@ -83,23 +83,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const result = await handler(args);
     
     // Log performance metrics
-    const duration = Date.now() - startTime;
-    if (duration > 1000) {
-      console.error(`[Performance] Tool ${name} took ${duration}ms`);
-    }
+    timer.end();
     
     return result;
     
   } catch (error) {
-    // Enhanced error handling with context
-    const duration = startTime ? Date.now() - startTime : 0;
+    timer.end();
     
     if (error instanceof z.ZodError) {
       const details = error.errors.map(e => 
         `${e.path.join('.')}: ${e.message}`
       ).join('; ');
       
-      console.error(`[Validation Error] Tool: ${request.params.name}, Details: ${details}`);
+      serverLogger.error(`Validation Error - Tool: ${request.params.name}, Details: ${details}`);
       
       throw new McpError(
         ErrorCode.InvalidParams,
@@ -108,13 +104,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     
     if (error instanceof McpError) {
-      console.error(`[MCP Error] Code: ${error.code}, Message: ${error.message}`);
+      serverLogger.error(`MCP Error - Code: ${error.code}, Message: ${error.message}`);
       throw error;
     }
     
     // Log unexpected errors
-    console.error(`[Unexpected Error] Tool: ${request.params.name}, Error:`, error);
-    console.error(`Stack trace:`, error.stack);
+    serverLogger.error(`Unexpected Error - Tool: ${request.params.name}, Error:`, error.message);
+    serverLogger.debug('Stack trace:', error.stack);
     
     // Re-throw with context
     throw new McpError(
@@ -134,49 +130,43 @@ async function main() {
     
     // Set up graceful shutdown
     process.on('SIGINT', async () => {
-      console.error('[Server] Shutting down gracefully...');
+      serverLogger.info('Shutting down gracefully...');
       try {
         await server.close();
-        console.error('[Server] Shutdown complete');
+        serverLogger.info('Shutdown complete');
       } catch (error) {
-        console.error('[Server] Error during shutdown:', error);
+        serverLogger.error('Error during shutdown:', error.message);
       }
       process.exit(0);
     });
     
     process.on('SIGTERM', async () => {
-      console.error('[Server] Received SIGTERM, shutting down...');
+      serverLogger.info('Received SIGTERM, shutting down...');
       try {
         await server.close();
       } catch (error) {
-        console.error('[Server] Error during shutdown:', error);
+        serverLogger.error('Error during shutdown:', error.message);
       }
       process.exit(0);
     });
     
     // Connect server to transport
     await server.connect(transport);
-    console.error(`[Server] Langfuse Prompt MCP server v${SERVER_CONFIG.version} running`);
-    console.error(`[Server] Available tools: ${Object.keys(TOOL_HANDLERS).join(', ')}`);
+    serverLogger.info(`Langfuse Prompt MCP server v${SERVER_CONFIG.version} running`);
+    serverLogger.info(`Available tools: ${Object.keys(TOOL_HANDLERS).join(', ')}`);
     
   } catch (error) {
-    console.error('[Fatal] Failed to start server:', error);
-    console.error('[Fatal] Stack trace:', error.stack);
-    process.exit(1);
+    serverLogger.fatal('Failed to start server:', error);
   }
 }
 
 // Handle uncaught errors
 process.on('uncaughtException', (error) => {
-  console.error('[Fatal] Uncaught exception:', error);
-  console.error('[Fatal] Stack trace:', error.stack);
-  process.exit(1);
+  serverLogger.fatal('Uncaught exception:', error);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[Fatal] Unhandled rejection at:', promise);
-  console.error('[Fatal] Reason:', reason);
-  process.exit(1);
+  serverLogger.fatal(`Unhandled rejection at: ${promise}, Reason: ${reason}`);
 });
 
 // Start server

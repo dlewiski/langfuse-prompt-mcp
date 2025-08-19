@@ -11,6 +11,8 @@ import { Langfuse } from "langfuse";
 import dotenv from "dotenv";
 import { existsSync } from "fs";
 import { join } from "path";
+import { configLogger } from './utils/logger.js';
+import { DEFAULTS } from './constants.js';
 
 // Determine environment file path
 const envPath = join(process.env.HOME || "", ".claude", ".env");
@@ -19,8 +21,8 @@ const envPath = join(process.env.HOME || "", ".claude", ".env");
 if (existsSync(envPath)) {
   dotenv.config({ path: envPath });
 } else {
-  console.warn(`[Config] Environment file not found at ${envPath}`);
-  console.warn("[Config] Using environment variables or defaults");
+  configLogger.warn(`Environment file not found at ${envPath}`);
+  configLogger.warn("Using environment variables or defaults");
 }
 
 // Validate required environment variables
@@ -29,10 +31,10 @@ const validateConfig = () => {
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
-    console.error(
-      `[Config] Missing required environment variables: ${missing.join(", ")}`
+    configLogger.error(
+      `Missing required environment variables: ${missing.join(", ")}`
     );
-    console.error("[Config] Please set these in your .env file or environment");
+    configLogger.error("Please set these in your .env file or environment");
     // Don't exit, allow graceful degradation
   }
 
@@ -51,19 +53,19 @@ export const langfuse = isConfigValid
       secretKey: process.env.LANGFUSE_SECRET_KEY,
       baseUrl: process.env.LANGFUSE_HOST || "http://localhost:3000",
       // Add timeout and retry configuration
-      requestTimeout: parseInt(process.env.LANGFUSE_TIMEOUT) || 30000,
-      maxRetries: parseInt(process.env.LANGFUSE_MAX_RETRIES) || 3,
+      requestTimeout: parseInt(process.env.LANGFUSE_TIMEOUT) || DEFAULTS.REQUEST_TIMEOUT,
+      maxRetries: parseInt(process.env.LANGFUSE_MAX_RETRIES) || DEFAULTS.MAX_RETRIES,
       // CRITICAL: Set low flush thresholds to ensure events are sent promptly
-      flushAt: parseInt(process.env.LANGFUSE_FLUSH_AT) || 1, // Send after 1 event
-      flushInterval: parseInt(process.env.LANGFUSE_FLUSH_INTERVAL) || 1000, // Flush every 1 second
+      flushAt: parseInt(process.env.LANGFUSE_FLUSH_AT) || DEFAULTS.FLUSH_AT,
+      flushInterval: parseInt(process.env.LANGFUSE_FLUSH_INTERVAL) || DEFAULTS.FLUSH_INTERVAL,
       // Enable debug mode if requested
       debug: process.env.LANGFUSE_DEBUG === "true",
     })
   : null;
 
 if (!langfuse) {
-  console.warn(
-    "[Config] Langfuse client not initialized due to missing configuration"
+  configLogger.warn(
+    "Langfuse client not initialized due to missing configuration"
   );
 }
 
@@ -215,13 +217,13 @@ export const CONFIG = Object.freeze({
   // Performance settings
   CACHE_TTL: parseIntWithValidation(
     process.env.CACHE_TTL,
-    3600000,
+    DEFAULTS.CACHE_TTL,
     0,
     86400000 // Default 1 hour, max 24 hours
   ),
   REQUEST_TIMEOUT: parseIntWithValidation(
     process.env.REQUEST_TIMEOUT,
-    30000,
+    DEFAULTS.REQUEST_TIMEOUT,
     1000,
     120000 // Default 30s, max 2 min
   ),
@@ -240,6 +242,6 @@ export const CONFIG = Object.freeze({
 
 // Log configuration in debug mode
 if (CONFIG.DEBUG_MODE) {
-  console.log("[Config] Running with configuration:", CONFIG);
-  console.log("[Config] Model configuration:", MODEL_CONFIG);
+  configLogger.debug("Running with configuration:", CONFIG);
+  configLogger.debug("Model configuration:", MODEL_CONFIG);
 }
