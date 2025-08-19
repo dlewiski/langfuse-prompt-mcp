@@ -98,4 +98,24 @@ export const toolDefinitions = [
       required: ['promptId', 'version'],
     },
   },
+  {
+    name: 'save',
+    description: 'Save an improved prompt to a markdown file',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        originalPrompt: { type: 'string', description: 'The original prompt text' },
+        improvedPrompt: { type: 'string', description: 'The improved prompt text' },
+        originalScore: { type: 'number', description: 'Original prompt score' },
+        improvedScore: { type: 'number', description: 'Improved prompt score' },
+        techniquesApplied: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'List of techniques that were applied'
+        },
+        filename: { type: 'string', description: 'Optional filename for saving' }
+      },
+      required: ['originalPrompt', 'improvedPrompt'],
+    },
+  },
 ];

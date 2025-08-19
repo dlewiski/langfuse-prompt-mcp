@@ -56,6 +56,7 @@ The server runs as an MCP server and integrates with Claude Code through stdio t
 ### Available Tools
 
 #### 1. Track Prompts
+
 Record prompts with automatic categorization and metadata:
 
 ```json
@@ -63,19 +64,20 @@ Record prompts with automatic categorization and metadata:
   "tool": "track",
   "arguments": {
     "prompt": "Your prompt text here",
-    "category": "react",  // Optional: auto-detected if not provided
+    "category": "react", // Optional: auto-detected if not provided
     "metadata": {
       "wordCount": 150,
       "complexity": "high",
       "hasCode": true,
       "frameworks": ["React", "TypeScript"]
     },
-    "quickScore": 85  // Optional: 0-100
+    "quickScore": 85 // Optional: 0-100
   }
 }
 ```
 
 #### 2. Evaluate Prompts
+
 Get comprehensive evaluation across 10 criteria:
 
 ```json
@@ -89,6 +91,7 @@ Get comprehensive evaluation across 10 criteria:
 ```
 
 Returns scores for:
+
 - **Clarity** (1.2x weight): Unambiguous instructions
 - **Structure** (1.1x): XML tags and organization
 - **Examples** (1.0x): 2-3 examples with reasoning
@@ -101,6 +104,7 @@ Returns scores for:
 - **Deployment** (0.8x): Production considerations
 
 #### 3. Improve Prompts
+
 Apply enhancement techniques based on evaluation:
 
 ```json
@@ -108,12 +112,13 @@ Apply enhancement techniques based on evaluation:
   "tool": "improve",
   "arguments": {
     "prompt": "Your prompt to improve",
-    "techniques": ["chain-of-thought", "xml-structure"]  // Optional: auto-selected
+    "techniques": ["chain-of-thought", "xml-structure"] // Optional: auto-selected
   }
 }
 ```
 
 Available techniques:
+
 - `chain-of-thought`: Add explicit reasoning steps
 - `xml-structure`: Organize with XML tags
 - `rich-examples`: Add detailed examples
@@ -121,6 +126,7 @@ Available techniques:
 - `success-criteria`: Define clear success metrics
 
 #### 4. Compare Versions
+
 Analyze differences between two prompt versions:
 
 ```json
@@ -135,19 +141,21 @@ Analyze differences between two prompt versions:
 ```
 
 #### 5. Extract Patterns
+
 Learn from high-performing prompts:
 
 ```json
 {
   "tool": "patterns",
   "arguments": {
-    "minScore": 85,  // Default: 85
-    "limit": 100     // Default: 100
+    "minScore": 85, // Default: 85
+    "limit": 100 // Default: 100
   }
 }
 ```
 
 #### 6. Deploy to Production
+
 Manage prompt versions in production:
 
 ```json
@@ -156,7 +164,7 @@ Manage prompt versions in production:
   "arguments": {
     "promptId": "prompt-id",
     "version": "v1.2.3",
-    "label": "production"  // Default: production
+    "label": "production" // Default: production
   }
 }
 ```
@@ -164,6 +172,7 @@ Manage prompt versions in production:
 ## Architecture
 
 ### Directory Structure
+
 ```
 langfuse-prompt/
 ├── server.js              # MCP server entry point
@@ -199,25 +208,33 @@ langfuse-prompt/
 ### Key Design Patterns
 
 #### 1. Handler-Based Architecture
+
 Each tool has a dedicated handler that:
+
 - Validates input using Zod schemas
 - Processes the request
 - Returns formatted MCP responses
 
 #### 2. LLM Integration Pattern
+
 The server uses a unique approach for LLM evaluation:
+
 - Returns special responses with `action: 'require_claude_task'`
 - Delegates to Claude Code's Task tool
 - Avoids external API calls
 
 #### 3. Weighted Scoring System
+
 Evaluation uses weighted criteria:
+
 - Each criterion has a base score (0-1)
 - Weights adjust importance (0.8-1.2x)
-- Overall score = weighted average * 100
+- Overall score = weighted average \* 100
 
 #### 4. Progressive Enhancement
+
 Improvements are applied iteratively:
+
 - Evaluate current state
 - Apply targeted techniques
 - Re-evaluate and compare
@@ -226,6 +243,7 @@ Improvements are applied iteratively:
 ## Integration with Claude Code
 
 ### MCP Commands
+
 The server integrates with Claude Code's command system:
 
 ```bash
@@ -246,7 +264,9 @@ The server integrates with Claude Code's command system:
 ```
 
 ### Task Tool Integration
+
 For LLM evaluation, the server returns:
+
 ```json
 {
   "action": "require_claude_task",
@@ -259,13 +279,16 @@ For LLM evaluation, the server returns:
 ```
 
 Claude Code then uses its Task tool with specialized agents:
+
 - `prompt-evaluation-judge`: For evaluation
 - `claude4-opus-prompt-optimizer`: For improvement
 
 ## Best Practices
 
 ### Prompt Categories
+
 The server auto-detects categories:
+
 - **react**: React/component/JSX/hooks
 - **api**: API/endpoint/REST/GraphQL
 - **database**: SQL/query/schema
@@ -273,12 +296,14 @@ The server auto-detects categories:
 - **general**: Everything else
 
 ### Evaluation Thresholds
+
 - **Excellent**: 90+ overall score
 - **Good**: 80-89
 - **Needs Improvement**: 70-79
 - **Poor**: Below 70
 
 ### Improvement Strategy
+
 1. Start with evaluation to identify weaknesses
 2. Apply targeted techniques for low-scoring areas
 3. Use comparison to verify improvements
@@ -290,10 +315,12 @@ The server auto-detects categories:
 ### Common Issues
 
 1. **Connection Failed**
+
    - Check Langfuse credentials in `.env`
    - Verify Langfuse host is accessible
 
 2. **Evaluation Returns Low Scores**
+
    - Review individual criterion scores
    - Apply recommended techniques
    - Use LLM evaluation for better accuracy
@@ -306,16 +333,19 @@ The server auto-detects categories:
 ## Development
 
 ### Running Tests
+
 ```bash
 npm test  # If tests are available
 ```
 
 ### Adding New Techniques
+
 1. Create technique file in `src/improvers/techniques/`
 2. Export improvement function
 3. Register in `src/improvers/index.js`
 
 ### Adding New Criteria
+
 1. Add evaluator in `src/evaluators/criteria.js`
 2. Register in `EVALUATION_CRITERIA` config
 3. Update recommendations logic

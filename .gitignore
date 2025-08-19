@@ -142,6 +142,9 @@ sessions/
 generated/
 auto-generated/
 
+# Improved prompts directory
+.prompts/
+
 # Archive files
 *.zip
 *.tar
