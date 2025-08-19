@@ -26,6 +26,7 @@ import { handleCompare } from './src/handlers/compare.js';
 import { handlePatterns } from './src/handlers/patterns.js';
 import { handleDeploy } from './src/handlers/deploy.js';
 import { handleTrack } from './src/handlers/track.js';
+import { handleSave } from './src/handlers/save.js';
 import { serverLogger } from './src/utils/logger.js';
 import { PERFORMANCE } from './src/constants.js';
 
@@ -37,6 +38,7 @@ const TOOL_HANDLERS = {
   compare: handleCompare,
   patterns: handlePatterns,
   deploy: handleDeploy,
+  save: handleSave,
 };
 
 // Server configuration
