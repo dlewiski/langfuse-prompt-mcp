@@ -178,16 +178,22 @@ export async function handleTrack(
     const hasCode = metadata?.hasCode ?? /```[\s\S]*```/.test(prompt);
     
     // Prepare enhanced metadata
-    const enhancedMetadata: PromptMetadata = {
+    const baseMetadata: any = {
       ...metadata,
+      ...context?.metadata,
       wordCount: metadata?.wordCount || wordCount,
       complexity,
       hasCode,
-      frameworks: frameworks.length > 0 ? frameworks : undefined,
       category: detectedCategory,
       timestamp: new Date().toISOString(),
-      ...context?.metadata,
     };
+    
+    // Remove undefined frameworks property if it exists
+    delete baseMetadata.frameworks;
+    
+    const enhancedMetadata: PromptMetadata = frameworks.length > 0 
+      ? { ...baseMetadata, frameworks }
+      : baseMetadata;
     
     // Check if Langfuse is configured
     if (!langfuse) {
@@ -208,8 +214,8 @@ export async function handleTrack(
     const trace = (langfuse as LangfuseClient).trace({
       name: 'prompt-tracking',
       metadata: enhancedMetadata,
-      userId: context?.userId,
-      sessionId: context?.sessionId,
+      ...(context?.userId && { userId: context.userId }),
+      ...(context?.sessionId && { sessionId: context.sessionId }),
       input: prompt,
       tags: [
         detectedCategory,
@@ -240,7 +246,7 @@ export async function handleTrack(
       category: detectedCategory,
       wordCount,
       complexity,
-      score: quickScore,
+      ...(quickScore !== undefined && { score: quickScore }),
     };
     
     return successResponse(response);

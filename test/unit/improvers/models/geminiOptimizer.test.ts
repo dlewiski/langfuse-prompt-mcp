@@ -56,7 +56,7 @@ describe('Gemini Optimizer', () => {
       ];
 
       levels.forEach(level => {
-        const result = optimizeForGemini('Test', { safetyLevel: level });
+        const result = optimizeForGemini('Test', { safetyLevel: level as any });
         expect(result.optimizedPrompt).toBeDefined();
       });
     });

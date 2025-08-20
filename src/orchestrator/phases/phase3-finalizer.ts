@@ -54,7 +54,7 @@ export class Phase3Finalizer {
     return {
       finalPrompt,
       finalScore,
-      improvement: improvement > 0 ? improvement : undefined,
+      ...(improvement > 0 && { improvement }),
       metadata: {
         originalScore,
         improved: phase2Results.improved,

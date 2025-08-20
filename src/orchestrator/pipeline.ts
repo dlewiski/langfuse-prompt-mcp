@@ -114,9 +114,9 @@ export class PromptPipeline extends EventEmitter {
     validator?: IValidator<PromptValidationInput>
   ) {
     super();
-    this.analyzer = analyzer;
-    this.transformer = transformer;
-    this.validator = validator;
+    if (analyzer) this.analyzer = analyzer;
+    if (transformer) this.transformer = transformer;
+    if (validator) this.validator = validator;
     this.setupEventListeners();
   }
 
@@ -147,7 +147,10 @@ export class PromptPipeline extends EventEmitter {
 
     try {
       // Phase 1: Analyze
-      const analysisInput: PromptAnalysisInput = { prompt, metadata };
+      const analysisInput: PromptAnalysisInput = { 
+        prompt, 
+        ...(metadata && { metadata })
+      };
       const analysisResult = await this.executePhase(
         'analyze',
         'Phase 1: Analysis',
@@ -242,7 +245,7 @@ export class PromptPipeline extends EventEmitter {
           context: { executionId, prompt: prompt.substring(0, 100) },
           timestamp: new Date().toISOString(),
           severity: 'high' as const,
-          stack: error instanceof Error ? error.stack : undefined
+          ...(error instanceof Error && error.stack && { stack: error.stack })
         },
         metadata: {
           pipelineId: 'prompt-pipeline',
@@ -304,20 +307,20 @@ export class PromptPipeline extends EventEmitter {
 
     const improvement = finalScore - input.originalScore;
 
-    return {
+    const result: PromptValidationOutput = {
       finalPrompt,
       finalScore,
-      improvement: improvement > 0 ? improvement : undefined,
+      ...(improvement > 0 && { improvement }),
       validation: validationResult,
       metadata: {
         originalScore: input.originalScore,
         improved: input.transformOutput.improved,
-        method: input.transformOutput.bestImprovement?.method,
-        tracking: null, // Will be populated by specific validator implementations
-        evaluation: null, // Will be populated by specific validator implementations
-        patternExtraction: null // Will be populated by specific validator implementations
+        ...(input.transformOutput.bestImprovement?.method && { method: input.transformOutput.bestImprovement.method })
+        // tracking, evaluation, and patternExtraction will be populated by specific validator implementations
       }
     };
+    
+    return result;
   }
 
   /**
@@ -362,7 +365,7 @@ export class PromptPipeline extends EventEmitter {
         code: 'PHASE_EXECUTION_ERROR',
         timestamp: new Date().toISOString(),
         severity: 'high' as const,
-        stack: error instanceof Error ? error.stack : undefined
+        ...(error instanceof Error && error.stack && { stack: error.stack })
       };
 
       this.emit('phase-error', { phase: phaseId, error: error as Error, timestamp: stepEndTime });

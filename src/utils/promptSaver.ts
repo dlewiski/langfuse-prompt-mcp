@@ -59,8 +59,8 @@ export async function saveImprovedPrompt(options: SavePromptOptions): Promise<Sa
       original,
       improved,
       targetModel,
-      evaluation,
-      improvedEvaluation
+      ...(evaluation && { evaluation }),
+      ...(improvedEvaluation && { improvedEvaluation })
     });
 
     // Write to file

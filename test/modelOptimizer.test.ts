@@ -56,7 +56,6 @@ describe('Model Detection', () => {
   it('should detect Claude model from content', () => {
     const result = detectModel({ 
       prompt: testPrompts.claude,
-      model: undefined,
       metadata: {}
     });
     
@@ -71,7 +70,6 @@ describe('Model Detection', () => {
   it('should detect GPT model from content', () => {
     const result = detectModel({ 
       prompt: testPrompts.gpt,
-      model: undefined,
       metadata: {}
     });
     
@@ -86,7 +84,6 @@ describe('Model Detection', () => {
   it('should detect Gemini model from content', () => {
     const result = detectModel({ 
       prompt: testPrompts.gemini,
-      model: undefined,
       metadata: {}
     });
     
@@ -109,7 +106,6 @@ describe('Model Detection', () => {
   it('should return generic for unknown models', () => {
     const result = detectModel({ 
       prompt: testPrompts.simple,
-      model: undefined,
       metadata: {}
     });
     

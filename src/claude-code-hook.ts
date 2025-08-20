@@ -11,13 +11,12 @@
 import orchestrator from './orchestrator/queen-bee-orchestrator.js';
 import { createModuleLogger } from './utils/structuredLogger.js';
 import type { 
-  ClaudeHookParams, 
-  ClaudeHookResult, 
   ClaudeHookMetadata, 
-  ClaudeHookConfig,
+  ClaudeHookConfig
+} from './types/refactor.js';
+import { 
   BaseError,
-  ProcessingError,
-  ValidationError
+  ProcessingError
 } from './types/refactor.js';
 
 /**
@@ -266,7 +265,7 @@ export async function spawnSubAgent(type: string, params: AgentParams): Promise<
       case 'claude4-opus-prompt-optimizer':
         return await optimizeForClaude4(params.prompt, params);
       case 'prompt-pattern-extractor':
-        return await extractPatterns(params.prompts, params);
+        return await extractPatterns(params.prompt, params);
       default:
         throw new Error(`Unknown agent type: ${type}`);
     }
@@ -308,7 +307,7 @@ async function optimizeForClaude4(prompt: string, _params: any): Promise<any> {
   };
 }
 
-async function extractPatterns(_prompts: any[], _params: any): Promise<any> {
+async function extractPatterns(_prompt: string, _params: any): Promise<any> {
   // Pattern extraction logic
   return {
     patterns: ['Use TypeScript', 'Include error handling', 'Add tests'],

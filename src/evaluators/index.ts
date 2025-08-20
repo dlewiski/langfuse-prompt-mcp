@@ -14,8 +14,7 @@
 import type { 
   EvaluationResult, 
   EvaluationCriterion,
-  CriterionScore,
-  ImprovementPriority 
+  CriterionScore
 } from '../types/domain.js';
 
 /**

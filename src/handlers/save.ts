@@ -46,8 +46,8 @@ export async function handleSave(args: SaveArgs): Promise<MCPResponseWithContent
     const content = createMarkdownContent({
       originalPrompt,
       improvedPrompt,
-      originalScore,
-      improvedScore,
+      ...(originalScore !== undefined && { originalScore }),
+      ...(improvedScore !== undefined && { improvedScore }),
       techniquesApplied
     });
     

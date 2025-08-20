@@ -101,7 +101,7 @@ export function validateModelSyntax(prompt: string, model: string) {
           }
         } catch (error) {
           validation.valid = false;
-          validation.errors.push(`Invalid JSON structure: ${error.message}`);
+          validation.errors.push(`Invalid JSON structure: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
       

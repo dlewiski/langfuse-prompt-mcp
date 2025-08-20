@@ -3,7 +3,7 @@
  * Comprehensive types for refactoring system, Claude hooks, pipelines, and error handling
  */
 
-import type { MCPToolResponse, MCPErrorResponse, MCPSuccessResponse } from './mcp.js';
+import type { MCPToolResponse, MCPErrorResponse } from './mcp.js';
 
 // ============= Claude Hook System =============
 
@@ -126,7 +126,7 @@ export abstract class BaseError extends Error {
   ) {
     super(message);
     this.code = code;
-    this.context = context;
+    if (context) this.context = context;
     this.timestamp = new Date();
     this.severity = severity;
 
@@ -160,10 +160,10 @@ export abstract class BaseError extends Error {
       name: this.constructor.name,
       message: this.message,
       code: this.code,
-      context: this.context,
+      ...(this.context && { context: this.context }),
       timestamp: this.timestamp.toISOString(),
       severity: this.severity,
-      stack: this.stack
+      ...(this.stack && { stack: this.stack })
     };
   }
 }

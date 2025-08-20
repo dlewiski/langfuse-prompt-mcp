@@ -148,8 +148,8 @@ export function groupByQuality(scores: Record<string, any>): Record<string, Arra
     const level = classifyScore(scoreData.score || 0);
     grouped[level].push({
       criterion,
-      score: scoreData.score,
-      description: scoreData.description,
+      ...(scoreData.score !== undefined && { score: scoreData.score }),
+      ...(scoreData.description !== undefined && { description: scoreData.description })
     });
   }
 
