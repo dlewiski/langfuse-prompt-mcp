@@ -5,7 +5,7 @@
  */
 
 import { LOG_PREFIX, PERFORMANCE } from '../constants.js';
-import { CONFIG } from '../config.js';
+import { CONFIG } from '../config/index.js';
 
 /**
  * Log levels for categorizing messages

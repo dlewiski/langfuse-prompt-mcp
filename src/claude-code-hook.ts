@@ -64,7 +64,7 @@ export async function registerQueenBeeOrchestrator(): Promise<void> {
       priority: 'HIGHEST',
       activation: 'ALWAYS',
       patterns: [/.*/], // Match ALL prompts
-      handler: async (prompt: string, context?: any) => {
+      handler: async (prompt: string, _context?: any) => {
         console.log('🐝 Queen Bee Orchestrator intercepted prompt');
         
         // Run orchestration
@@ -229,17 +229,17 @@ export async function spawnSubAgent(type: string, params: any): Promise<any> {
 }
 
 // Agent implementation functions (simplified)
-async function trackPrompt(prompt: string, params: any): Promise<any> {
+async function trackPrompt(_prompt: string, _params: any): Promise<any> {
   // Implementation would use mcp__langfuse_prompt__track
   return { tracked: true, id: 'track-' + Date.now() };
 }
 
-async function evaluatePrompt(prompt: string, params: any): Promise<any> {
+async function evaluatePrompt(_prompt: string, _params: any): Promise<any> {
   // Implementation would use mcp__langfuse_prompt__evaluate
   return { score: 75, details: {} };
 }
 
-async function improveReactPrompt(prompt: string, params: any): Promise<any> {
+async function improveReactPrompt(prompt: string, _params: any): Promise<any> {
   // React-specific improvements
   return { 
     prompt: prompt + ' [React optimized]',
@@ -247,7 +247,7 @@ async function improveReactPrompt(prompt: string, params: any): Promise<any> {
   };
 }
 
-async function improveAPIPrompt(prompt: string, params: any): Promise<any> {
+async function improveAPIPrompt(prompt: string, _params: any): Promise<any> {
   // API-specific improvements
   return {
     prompt: prompt + ' [API optimized]',
@@ -255,7 +255,7 @@ async function improveAPIPrompt(prompt: string, params: any): Promise<any> {
   };
 }
 
-async function optimizeForClaude4(prompt: string, params: any): Promise<any> {
+async function optimizeForClaude4(prompt: string, _params: any): Promise<any> {
   // Claude 4 specific optimizations
   return {
     prompt: prompt + ' [Claude 4 optimized]',
@@ -263,7 +263,7 @@ async function optimizeForClaude4(prompt: string, params: any): Promise<any> {
   };
 }
 
-async function extractPatterns(prompts: any[], params: any): Promise<any> {
+async function extractPatterns(_prompts: any[], _params: any): Promise<any> {
   // Pattern extraction logic
   return {
     patterns: ['Use TypeScript', 'Include error handling', 'Add tests'],
