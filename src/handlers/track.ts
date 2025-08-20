@@ -4,7 +4,7 @@
  * @module handlers/track
  */
 
-import { langfuse } from '../config.js';
+import { langfuse } from '../config/index.js';
 import { TrackSchema, type TrackInput } from '../tools/schemas.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';

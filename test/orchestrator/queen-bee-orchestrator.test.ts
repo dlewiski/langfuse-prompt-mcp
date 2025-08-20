@@ -9,7 +9,7 @@ describe('Queen Bee Orchestrator Tests', () => {
   let orchestrator: QueenBeeOrchestrator;
 
   beforeEach(() => {
-    orchestrator = new QueenBeeOrchestrator({
+    orchestrator = QueenBeeOrchestrator.resetInstance({
       activation: { 
         automatic: true,
         manual_override: false,
@@ -133,7 +133,7 @@ describe('Queen Bee Orchestrator Tests', () => {
   describe('Error Handling', () => {
     it('should handle agent failures gracefully', async () => {
       // Create orchestrator with very short timeout to force failures
-      const failOrchestrator = new QueenBeeOrchestrator({
+      const failOrchestrator = QueenBeeOrchestrator.resetInstance({
         parallelization: { 
           max_concurrent_agents: 5,
           timeout_ms: 1, // Force timeout
@@ -151,7 +151,7 @@ describe('Queen Bee Orchestrator Tests', () => {
     });
 
     it('should retry failed agents when configured', async () => {
-      const retryOrchestrator = new QueenBeeOrchestrator({
+      const retryOrchestrator = QueenBeeOrchestrator.resetInstance({
         parallelization: { 
           max_concurrent_agents: 5,
           timeout_ms: 100,
@@ -233,7 +233,7 @@ describe('Queen Bee Orchestrator Tests', () => {
         }
       };
       
-      const customOrchestrator = new QueenBeeOrchestrator(customConfig);
+      const customOrchestrator = QueenBeeOrchestrator.resetInstance(customConfig);
       const status = customOrchestrator.getStatus();
       
       expect(status.config.thresholds.improvement_trigger).toBe(80);

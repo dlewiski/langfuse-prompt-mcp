@@ -68,7 +68,7 @@ export class Logger {
     this.prefix = options.customPrefix || 
                   LOG_PREFIX[module.toUpperCase() as keyof typeof LOG_PREFIX] || 
                   `[${module}]`;
-    this.enableDebug = options.enableDebug ?? CONFIG.DEBUG_MODE;
+    this.enableDebug = options.enableDebug ?? CONFIG.debug;
     this.enablePerformance = options.enablePerformance ?? PERFORMANCE.MONITORING_ENABLED;
   }
 

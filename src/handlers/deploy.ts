@@ -4,7 +4,7 @@
  */
 
 import { DeploySchema, type DeployInput } from '../tools/schemas.js';
-import { langfuse } from '../config.js';
+import { langfuse } from '../config/index.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
 import type { LangfuseDeployment } from '../types/domain.js';
