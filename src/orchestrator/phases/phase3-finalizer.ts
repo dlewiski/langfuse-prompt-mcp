@@ -8,6 +8,7 @@ import {
   mcp__langfuse_prompt__evaluate,
 } from "../../tools/mcp-tools.js";
 import { Phase2Results } from "./phase2-improver.js";
+import { createModuleLogger } from "../../utils/structuredLogger.js";
 
 export interface Phase3Results {
   finalPrompt: string;
@@ -17,12 +18,14 @@ export interface Phase3Results {
 }
 
 export class Phase3Finalizer {
+  private logger = createModuleLogger('Phase3Finalizer');
+
   async execute(
     originalPrompt: string,
     originalScore: number,
     phase2Results: Phase2Results
   ): Promise<Phase3Results> {
-    console.log("🐝 Phase 3: Finalization and Storage");
+    this.logger.info("🐝 Phase 3: Finalization and Storage");
 
     const finalPrompt = phase2Results.improved && phase2Results.bestImprovement
       ? phase2Results.bestImprovement.prompt
@@ -46,7 +49,7 @@ export class Phase3Finalizer {
 
     const improvement = finalScore - originalScore;
 
-    console.log(`🐝 Final score: ${finalScore} (${improvement >= 0 ? '+' : ''}${improvement})`);
+    this.logger.info(`🐝 Final score: ${finalScore}`, { improvement: `${improvement >= 0 ? '+' : ''}${improvement}` });
 
     return {
       finalPrompt,
@@ -74,7 +77,7 @@ export class Phase3Finalizer {
       });
       return result;
     } catch (error) {
-      console.warn("⚠️ Failed to track improved prompt:", error);
+      this.logger.warn("⚠️ Failed to track improved prompt", error);
       return null;
     }
   }
@@ -84,7 +87,7 @@ export class Phase3Finalizer {
       const result = await mcp__langfuse_prompt__evaluate({ prompt });
       return result;
     } catch (error) {
-      console.warn("⚠️ Failed to evaluate improved prompt:", error);
+      this.logger.warn("⚠️ Failed to evaluate improved prompt", error);
       return null;
     }
   }

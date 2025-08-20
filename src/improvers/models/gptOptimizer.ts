@@ -166,7 +166,7 @@ function addResponseFormat(prompt: string, _options: GPTOptimizerOptions): strin
   }
   
   if (detectedFormat) {
-    const schemas = {
+    const schemas: Record<string, any> = {
       json: {
         type: "json_object",
         schema: {
@@ -319,7 +319,7 @@ function addParameterHints(prompt: string, _options: GPTOptimizerOptions): { pro
 /**
  * Adds o1 model specific reasoning structure
  */
-function addO1Reasoning(prompt) {
+function addO1Reasoning(prompt: string): string {
   const reasoningStructure = `
 ## Reasoning Process
 

@@ -200,9 +200,9 @@ const deployTool: MCPTool<'deploy'> = {
 
 /**
  * Combined tool definitions array
- * Export as compatible MCP Tool array
+ * Export as properly typed MCP Tool array
  */
-export const toolDefinitions: ReadonlyArray<any> = [
+export const toolDefinitions: readonly MCPTool[] = [
   trackTool,
   evaluateTool,
   improveTool,

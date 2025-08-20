@@ -88,7 +88,7 @@ function optimizeForClaude(prompt: string, options: ClaudeOptimizerOptions = {})
 /**
  * Transforms prompt to XML structure
  */
-function transformToXMLStructure(prompt) {
+function transformToXMLStructure(prompt: string): string {
   // Skip if already has XML structure
   if (/<[^>]+>.*<\/[^>]+>/s.test(prompt)) {
     return prompt;
@@ -118,11 +118,11 @@ function transformToXMLStructure(prompt) {
       } else if (workingPrompt.includes('|')) {
         // Likely contains formatted log output
         const lines = workingPrompt.split('\n');
-        const logLines = lines.filter(line => line.includes('|'));
+        const logLines = lines.filter((line: string) => line.includes('|'));
         if (logLines.length > 0) {
           sections.push(`<logs>\n${logLines.join('\n')}\n</logs>`);
           // Remove log lines from working prompt
-          logLines.forEach(line => {
+          logLines.forEach((line: string) => {
             workingPrompt = workingPrompt.replace(line, '');
           });
         }
@@ -201,7 +201,7 @@ function transformToXMLStructure(prompt) {
 /**
  * Adds thinking tags for complex reasoning
  */
-function addThinkingTags(prompt) {
+function addThinkingTags(prompt: string): string {
   if (prompt.includes('<thinking>')) {
     return prompt;
   }
@@ -237,7 +237,7 @@ I'll help you with this task. Let me break down the approach:
 /**
  * Adds constitutional AI alignment principles
  */
-function addConstitutionalAlignment(prompt) {
+function addConstitutionalAlignment(prompt: string): string {
   if (prompt.includes('helpful') && prompt.includes('honest')) {
     return prompt;
   }
@@ -256,7 +256,7 @@ function addConstitutionalAlignment(prompt) {
 /**
  * Adds artifact generation support
  */
-function addArtifactSupport(prompt) {
+function addArtifactSupport(prompt: string): string {
   const artifactInstructions = `
 <artifact_generation>
 If the response includes code, configurations, or substantial structured content:
@@ -272,7 +272,7 @@ If the response includes code, configurations, or substantial structured content
 /**
  * Enhances role and perspective setting
  */
-function enhanceRoleSetting(prompt) {
+function enhanceRoleSetting(prompt: string): string {
   if (!prompt.includes('You are') && !prompt.includes('<role>')) {
     const roleSection = `<role>
 You are an expert assistant with deep knowledge in the relevant domain.
@@ -288,7 +288,7 @@ Apply best practices and industry standards in your response.
 /**
  * Adds response quality tags
  */
-function addQualityTags(prompt) {
+function addQualityTags(prompt: string): string {
   const qualitySection = `
 <answer_quality>
 Ensure your response is:
@@ -304,7 +304,7 @@ Ensure your response is:
 /**
  * Formats examples as XML
  */
-function formatExamplesAsXML(examplesText) {
+function formatExamplesAsXML(examplesText: string): string {
   const lines = examplesText.split('\n');
   const formattedExamples = [];
   let currentExample = [];
@@ -331,7 +331,7 @@ function formatExamplesAsXML(examplesText) {
 /**
  * Detects if the prompt is complex enough to need thinking tags
  */
-function detectComplexity(prompt) {
+function detectComplexity(prompt: string): number {
   let complexity = 0;
   
   // Keywords indicating complexity
@@ -361,7 +361,7 @@ function detectComplexity(prompt) {
 /**
  * Detects if artifacts should be generated
  */
-function detectArtifactNeed(prompt) {
+function detectArtifactNeed(prompt: string): boolean {
   const artifactKeywords = [
     'code', 'function', 'class', 'component', 'script',
     'configuration', 'yaml', 'json', 'implement', 'create'
@@ -374,7 +374,7 @@ function detectArtifactNeed(prompt) {
 /**
  * Creates Claude-specific example format
  */
-function createClaudeExample(input, output) {
+function createClaudeExample(input: string, output: string): string {
   return `<example>
 <input>${input}</input>
 <output>${output}</output>

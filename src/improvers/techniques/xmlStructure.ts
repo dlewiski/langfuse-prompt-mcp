@@ -1,4 +1,4 @@
-export async function addXmlStructure(prompt) {
+export async function addXmlStructure(prompt: string): Promise<string> {
   // If already has good XML structure, enhance it
   if (/<task>.*<\/task>/is.test(prompt)) {
     return enhanceExistingStructure(prompt);
@@ -30,7 +30,7 @@ ${extractImplementationDetails(prompt)}
 </task>`;
 }
 
-function structureTroubleshootingPrompt(prompt, hasLogs) {
+function structureTroubleshootingPrompt(prompt: string, hasLogs: boolean): string {
   const sections = [];
   
   // Extract problem statement
@@ -71,10 +71,10 @@ function structureTroubleshootingPrompt(prompt, hasLogs) {
   return `<troubleshooting>\n${sections.join('\n\n')}\n</troubleshooting>`;
 }
 
-function extractProblemStatement(prompt) {
+function extractProblemStatement(prompt: string): string {
   // Extract the first sentence or line that describes the problem
   const lines = prompt.split(/[.\n]/);
-  const problemLine = lines.find(line => {
+  const problemLine = lines.find((line: string) => {
     const trimmed = line.trim();
     return trimmed.length > 10 && /(?:concern|issue|problem|not|error)/i.test(trimmed);
   });
@@ -82,22 +82,22 @@ function extractProblemStatement(prompt) {
   return problemLine?.trim() || prompt.split('\n')[0].trim();
 }
 
-function extractTroubleshootingContext(prompt) {
+function extractTroubleshootingContext(prompt: string): string | null {
   // Look for technology mentions
   const techKeywords = /(docker|kubernetes|langfuse|redis|postgres|api|server|service|local|production)/gi;
   const matches = prompt.match(techKeywords);
   
   if (matches && matches.length > 0) {
-    const uniqueTech = [...new Set(matches.map(m => m.toLowerCase()))];
+    const uniqueTech = [...new Set(matches.map((m: string) => m.toLowerCase()))];
     return `- Environment: ${uniqueTech.includes('local') ? 'Local development' : 'Production'}\n` +
-           `- Technologies: ${uniqueTech.filter(t => t !== 'local').join(', ')}\n` +
+           `- Technologies: ${uniqueTech.filter((t: string) => t !== 'local').join(', ')}\n` +
            `- Components involved: ${extractComponents(prompt)}`;
   }
   
   return null;
 }
 
-function extractComponents(prompt) {
+function extractComponents(prompt: string): string {
   const componentPatterns = /(?:worker|server|database|cache|api|frontend|backend|service)/gi;
   const matches = prompt.match(componentPatterns);
   
@@ -108,7 +108,7 @@ function extractComponents(prompt) {
   return 'Unknown components';
 }
 
-function extractLogs(prompt) {
+function extractLogs(prompt: string): string | null {
   const lines = prompt.split('\n');
   const logLines = [];
   let inLogSection = false;
@@ -131,7 +131,7 @@ function extractLogs(prompt) {
   return logLines.length > 0 ? logLines.join('\n') : null;
 }
 
-function enhanceExistingStructure(prompt) {
+function enhanceExistingStructure(prompt: string): string {
   // Add missing sections if needed
   let enhanced = prompt;
   
@@ -146,14 +146,14 @@ function enhanceExistingStructure(prompt) {
   return enhanced;
 }
 
-function extractObjective(prompt) {
+function extractObjective(prompt: string): string {
   // Extract the main objective from the prompt
   const lines = prompt.split('\n');
-  const firstLine = lines.find(line => line.trim().length > 0);
+  const firstLine = lines.find((line: string) => line.trim().length > 0);
   return firstLine || 'Define the main objective clearly';
 }
 
-function extractContext(prompt) {
+function extractContext(prompt: string): string {
   // Extract context information more intelligently
   const contextIndicators = [
     /(?:using|with|in|on)\s+(\w+(?:\s+\w+)*)/gi,
@@ -187,7 +187,7 @@ function extractContext(prompt) {
   return '- Define the technical context\n- Specify constraints\n- Mention the tech stack';
 }
 
-function extractRequirements(prompt) {
+function extractRequirements(prompt: string): string {
   // Extract requirements more intelligently
   const requirementPatterns = [
     /(?:must|should|need to|required to|have to)\s+(.+?)(?:\.|,|\n|$)/gi,
@@ -220,7 +220,7 @@ SHOULD HAVE:
 - Optimizations`;
 }
 
-function extractImplementationDetails(prompt) {
+function extractImplementationDetails(prompt: string): string {
   // Extract any code snippets, configuration, or specific details
   const lines = prompt.split('\n');
   const detailLines = [];

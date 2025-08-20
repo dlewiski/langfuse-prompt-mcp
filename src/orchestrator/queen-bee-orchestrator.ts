@@ -9,6 +9,7 @@ import { Phase1Analyzer, Phase1Results } from "./phases/phase1-analyzer.js";
 import { Phase2Improver, Phase2Results } from "./phases/phase2-improver.js";
 import { Phase3Finalizer, Phase3Results } from "./phases/phase3-finalizer.js";
 import { Phase4PatternExtractor } from "./phases/phase4-pattern-extractor.js";
+import { createModuleLogger } from "../utils/structuredLogger.js";
 
 interface OrchestratorConfig {
   activation: {
@@ -40,6 +41,7 @@ interface OrchestratorConfig {
 export class QueenBeeOrchestrator {
   private config: OrchestratorConfig;
   private static instance: QueenBeeOrchestrator | null = null;
+  private logger = createModuleLogger('QueenBeeOrchestrator');
   // Prompt history tracking removed as it was unused
   // Can be re-added when needed for history functionality
   
@@ -106,14 +108,13 @@ export class QueenBeeOrchestrator {
   }
 
   private setupAutoActivation(): void {
-    console.log("🐝 Queen Bee Orchestrator: Auto-activation setup complete");
+    this.logger.info("🐝 Queen Bee Orchestrator: Auto-activation setup complete");
     
     if (this.config.activation.debug_mode) {
-      console.log("🐝 Configuration:", JSON.stringify(this.config, null, 2));
+      this.logger.debug("🐝 Configuration", { config: this.config });
     }
     
-    console.log("🐝 Queen Bee Orchestrator initialized and ready");
-    console.log(`🐝 Automatic activation: ${this.config.activation.automatic}`);
+    this.logger.info("🐝 Queen Bee Orchestrator initialized and ready", { automaticActivation: this.config.activation.automatic });
   }
 
   /**
@@ -121,8 +122,7 @@ export class QueenBeeOrchestrator {
    */
   async orchestrate(userPrompt: string): Promise<any> {
     const startTime = Date.now();
-    console.log("🐝 Queen Bee Orchestrator: Processing prompt");
-    console.log(`🐝 Prompt length: ${userPrompt.length}`);
+    this.logger.info("🐝 Queen Bee Orchestrator: Processing prompt", { promptLength: userPrompt.length });
 
     try {
       // Phase 1: Parallel initial analysis
@@ -153,8 +153,7 @@ export class QueenBeeOrchestrator {
       this.executePhase4Async();
 
       const duration = Date.now() - startTime;
-      console.log(`🐝 Orchestration complete in ${duration}ms`);
-      console.log(`🐝 Final score: ${phase3Results.finalScore}`);
+      this.logger.info("🐝 Orchestration complete", { duration: `${duration}ms`, finalScore: phase3Results.finalScore });
 
       return {
         success: true,
@@ -175,7 +174,7 @@ export class QueenBeeOrchestrator {
         },
       };
     } catch (error) {
-      console.error("❌ Orchestration failed:", error);
+      this.logger.error("❌ Orchestration failed", error);
       
       // Fallback to basic tracking
       if (this.config.parallelization.fallback_mode === "basic_tracking") {
@@ -216,12 +215,12 @@ export class QueenBeeOrchestrator {
   }
 
   private async fallbackTracking(prompt: string): Promise<void> {
-    console.log("🔄 Fallback: Basic tracking");
+    this.logger.info("🔄 Fallback: Basic tracking");
     try {
       // Simple tracking without orchestration
       this.phase4.addToHistory(prompt, 50); // Default score
     } catch (error) {
-      console.error("❌ Fallback tracking failed:", error);
+      this.logger.error("❌ Fallback tracking failed", error);
     }
   }
 
@@ -256,7 +255,7 @@ export class QueenBeeOrchestrator {
     this.phase2 = new Phase2Improver(this.config);
     this.phase4 = new Phase4PatternExtractor(this.config);
     
-    console.log("🐝 Configuration updated");
+    this.logger.info("🐝 Configuration updated");
   }
 
   /**

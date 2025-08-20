@@ -9,14 +9,47 @@
  */
 
 import orchestrator from './orchestrator/queen-bee-orchestrator.js';
+import { createModuleLogger } from './utils/structuredLogger.js';
+import type { 
+  ClaudeHookParams, 
+  ClaudeHookResult, 
+  ClaudeHookMetadata, 
+  ClaudeHookConfig,
+  BaseError,
+  ProcessingError,
+  ValidationError
+} from './types/refactor.js';
 
 /**
  * Interface for Claude Code's agent system (hypothetical)
  */
+interface AgentParams {
+  prompt: string;
+  context?: ClaudeHookMetadata;
+  config?: ClaudeHookConfig;
+  [key: string]: unknown;
+}
+
+interface AgentResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface IntegrationStatus {
+  available: boolean;
+  message?: string;
+  fallback?: string;
+  orchestratorRegistered?: boolean;
+  subAgentsCount?: number;
+  autoActivation?: boolean;
+}
+
 interface ClaudeCodeAgentSystem {
   registerAgent(agent: AgentDefinition): Promise<void>;
   registerPromptHook(hook: PromptHook): Promise<void>;
-  spawnSubAgent(type: string, params: any): Promise<any>;
+  spawnSubAgent(type: string, params: AgentParams): Promise<AgentResult>;
   getAgentRegistry(): AgentDefinition[];
 }
 
@@ -27,7 +60,7 @@ interface AgentDefinition {
   priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
   activation: 'ALWAYS' | 'CONTEXT' | 'MANUAL';
   patterns?: RegExp[];
-  handler: (prompt: string, context?: any) => Promise<any>;
+  handler: (prompt: string, context?: ClaudeHookMetadata) => Promise<AgentResult>;
 }
 
 interface PromptHook {
@@ -49,9 +82,11 @@ declare global {
  * This is what SHOULD happen when the MCP server starts
  */
 export async function registerQueenBeeOrchestrator(): Promise<void> {
+  const logger = createModuleLogger('ClaudeCodeHook');
+  
   if (typeof globalThis.ClaudeCode === 'undefined') {
-    console.warn('⚠️ Claude Code agent system not available');
-    console.warn('⚠️ Orchestrator will only work via manual tool invocation');
+    logger.warn('⚠️ Claude Code agent system not available');
+    logger.warn('⚠️ Orchestrator will only work via manual tool invocation');
     return;
   }
 
@@ -64,21 +99,24 @@ export async function registerQueenBeeOrchestrator(): Promise<void> {
       priority: 'HIGHEST',
       activation: 'ALWAYS',
       patterns: [/.*/], // Match ALL prompts
-      handler: async (prompt: string, _context?: any) => {
-        console.log('🐝 Queen Bee Orchestrator intercepted prompt');
+      handler: async (prompt: string, _context?: ClaudeHookMetadata): Promise<AgentResult> => {
+        logger.info('🐝 Queen Bee Orchestrator intercepted prompt');
         
         // Run orchestration
         const result = await orchestrator.orchestrate(prompt);
         
         // Return enhanced prompt to Claude Code
         return {
-          originalPrompt: prompt,
-          enhancedPrompt: result.finalPrompt,
-          metadata: {
-            orchestrated: true,
-            score: result.finalScore,
-            improved: result.improved,
-            context: result.context
+          success: true,
+          data: {
+            originalPrompt: prompt,
+            enhancedPrompt: result.finalPrompt,
+            metadata: {
+              orchestrated: true,
+              score: result.finalScore,
+              improved: result.improved,
+              context: result.context
+            }
           }
         };
       }
@@ -161,7 +199,7 @@ export async function registerQueenBeeOrchestrator(): Promise<void> {
     // Register all sub-agents
     for (const agent of subAgents) {
       await globalThis.ClaudeCode.registerAgent(agent);
-      console.log(`✅ Registered sub-agent: ${agent.name}`);
+      logger.info(`✅ Registered sub-agent: ${agent.name}`);
     }
 
     // 3. Register prompt interception hook
@@ -187,12 +225,18 @@ export async function registerQueenBeeOrchestrator(): Promise<void> {
       }
     });
 
-    console.log('✅ Queen Bee Orchestrator registered with Claude Code');
-    console.log('🐝 Auto-activation enabled for ALL prompts');
+    logger.info('✅ Queen Bee Orchestrator registered with Claude Code');
+    logger.info('🐝 Auto-activation enabled for ALL prompts');
     
   } catch (error) {
-    console.error('❌ Failed to register orchestrator with Claude Code:', error);
-    throw error;
+    logger.error('❌ Failed to register orchestrator with Claude Code', error);
+    if (error instanceof BaseError) {
+      throw error;
+    }
+    throw new ProcessingError(
+      `Failed to register orchestrator: ${error instanceof Error ? error.message : String(error)}`,
+      { originalError: error }
+    );
   }
 }
 
@@ -200,13 +244,14 @@ export async function registerQueenBeeOrchestrator(): Promise<void> {
  * Helper function to spawn sub-agents
  * This would use Claude Code's Task tool in reality
  */
-export async function spawnSubAgent(type: string, params: any): Promise<any> {
+export async function spawnSubAgent(type: string, params: AgentParams): Promise<AgentResult> {
   if (globalThis.ClaudeCode?.spawnSubAgent) {
     // Use Claude Code's native spawning
     return await globalThis.ClaudeCode.spawnSubAgent(type, params);
   } else {
     // Fallback to direct execution
-    console.warn(`⚠️ Direct execution of ${type} (Claude Code spawning not available)`);
+    const logger = createModuleLogger('ClaudeCodeHook');
+    logger.warn(`⚠️ Direct execution of ${type} (Claude Code spawning not available)`);
     
     // Simulate agent execution
     switch (type) {
@@ -281,7 +326,7 @@ export function isClaudeCodeAvailable(): boolean {
 /**
  * Get integration status
  */
-export function getIntegrationStatus(): any {
+export function getIntegrationStatus(): IntegrationStatus {
   if (!isClaudeCodeAvailable()) {
     return {
       available: false,
@@ -303,8 +348,10 @@ export function getIntegrationStatus(): any {
 
 // Auto-register on import if Claude Code is available
 if (isClaudeCodeAvailable()) {
-  registerQueenBeeOrchestrator().catch(console.error);
+  const logger = createModuleLogger('ClaudeCodeHook');
+  registerQueenBeeOrchestrator().catch((error) => logger.error('Registration failed', error));
 } else {
-  console.log('📝 Claude Code integration not available');
-  console.log('📝 Use manual orchestration: mcp__langfuse_prompt__orchestrate_prompt({ prompt: "..." })');
+  const logger = createModuleLogger('ClaudeCodeHook');
+  logger.info('📝 Claude Code integration not available');
+  logger.info('📝 Use manual orchestration: mcp__langfuse_prompt__orchestrate_prompt({ prompt: "..." })');
 }

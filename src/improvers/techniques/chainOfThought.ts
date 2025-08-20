@@ -1,4 +1,4 @@
-export async function addChainOfThought(prompt) {
+export async function addChainOfThought(prompt: string): Promise<string> {
   // Check if prompt already has chain of thought
   if (/<thinking>|Let me think|step by step/i.test(prompt)) {
     return prompt;

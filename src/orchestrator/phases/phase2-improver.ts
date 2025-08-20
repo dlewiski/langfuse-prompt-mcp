@@ -5,6 +5,7 @@
 
 import { mcp__langfuse_prompt__improve } from "../../tools/mcp-tools.js";
 import { Context } from "./phase1-analyzer.js";
+import { createModuleLogger } from "../../utils/structuredLogger.js";
 
 export interface Phase2Results {
   improved: boolean;
@@ -19,6 +20,7 @@ export interface Phase2Results {
 
 export class Phase2Improver {
   private config: any;
+  private logger = createModuleLogger('Phase2Improver');
 
   constructor(config: any) {
     this.config = config;
@@ -29,18 +31,17 @@ export class Phase2Improver {
     currentScore: number,
     context: Context
   ): Promise<Phase2Results> {
-    console.log("🐝 Phase 2: Conditional Improvement");
-    console.log("🐝 Current score:", currentScore);
+    this.logger.info("🐝 Phase 2: Conditional Improvement", { currentScore });
 
     // Check if improvement is needed
     if (currentScore >= this.config.thresholds.high_quality) {
-      console.log("✅ Prompt quality sufficient, skipping improvement");
+      this.logger.info("✅ Prompt quality sufficient, skipping improvement");
       return { improved: false };
     }
 
     // Select improvement agents based on context
     const agents = this.selectImprovementAgents(context);
-    console.log("🐝 Selected improvement agents:", agents);
+    this.logger.info("🐝 Selected improvement agents", { agents });
 
     // Spawn improvement agents in parallel
     const improvements = await Promise.all(
@@ -53,13 +54,13 @@ export class Phase2Improver {
     );
 
     if (validImprovements.length === 0) {
-      console.log("⚠️ No valid improvements generated");
+      this.logger.warn("⚠️ No valid improvements generated");
       return { improved: false };
     }
 
     // Select best improvement
     const best = this.selectBestImprovement(validImprovements);
-    console.log("🐝 Best improvement:", best.method, "+", best.scoreImprovement);
+    this.logger.info("🐝 Best improvement", { method: best.method, scoreImprovement: best.scoreImprovement });
 
     return {
       improved: true,
@@ -118,7 +119,7 @@ export class Phase2Improver {
       
       return null;
     } catch (error) {
-      console.warn(`⚠️ Improvement failed for ${agentType}:`, error);
+      this.logger.warn(`⚠️ Improvement failed for ${agentType}`, error);
       return null;
     }
   }

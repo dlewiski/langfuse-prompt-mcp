@@ -1,4 +1,4 @@
-export async function addExamples(prompt) {
+export async function addExamples(prompt: string): Promise<string> {
   // Check if prompt already has good examples
   const exampleCount = (prompt.match(/<example>|Example:|For example/gi) || []).length;
   

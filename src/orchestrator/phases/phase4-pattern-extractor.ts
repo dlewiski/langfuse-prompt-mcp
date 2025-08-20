@@ -4,6 +4,7 @@
  */
 
 import { mcp__langfuse_prompt__patterns } from "../../tools/mcp-tools.js";
+import { createModuleLogger } from "../../utils/structuredLogger.js";
 
 export interface PromptHistoryItem {
   prompt: string;
@@ -16,6 +17,7 @@ export class Phase4PatternExtractor {
   private promptHistory: PromptHistoryItem[] = [];
   private config: any;
   private extractionInProgress = false;
+  private logger = createModuleLogger('Phase4PatternExtractor');
 
   constructor(config: any) {
     this.config = config;
@@ -36,7 +38,7 @@ export class Phase4PatternExtractor {
   }
 
   executeAsync(): void {
-    console.log("🐝 Phase 4: Async Pattern Extraction");
+    this.logger.info("🐝 Phase 4: Async Pattern Extraction");
 
     // Don't start if already in progress
     if (this.extractionInProgress) {
@@ -49,8 +51,9 @@ export class Phase4PatternExtractor {
     );
 
     if (highScoringPrompts.length < this.config.thresholds.pattern_extraction_min) {
-      console.log(
-        `📊 Not enough high-scoring prompts for pattern extraction (${highScoringPrompts.length}/${this.config.thresholds.pattern_extraction_min})`
+      this.logger.info(
+        `📊 Not enough high-scoring prompts for pattern extraction`,
+        { current: highScoringPrompts.length, required: this.config.thresholds.pattern_extraction_min }
       );
       return;
     }
@@ -64,7 +67,7 @@ export class Phase4PatternExtractor {
         }
       })
       .catch(error => {
-        console.error("❌ Pattern extraction failed:", error);
+        this.logger.error("❌ Pattern extraction failed", error);
       })
       .finally(() => {
         this.extractionInProgress = false;
@@ -73,7 +76,7 @@ export class Phase4PatternExtractor {
 
   private async extractPatterns(): Promise<any> {
     try {
-      console.log("🔍 Extracting patterns from high-scoring prompts...");
+      this.logger.info("🔍 Extracting patterns from high-scoring prompts...");
       
       const result = await mcp__langfuse_prompt__patterns({
         minScore: this.config.thresholds.high_quality,
@@ -81,25 +84,25 @@ export class Phase4PatternExtractor {
       });
 
       if (result?.patterns) {
-        console.log(`✅ Extracted ${result.patterns.length} patterns`);
+        this.logger.info(`✅ Extracted ${result.patterns.length} patterns`);
         return result.patterns;
       }
 
       return null;
     } catch (error) {
-      console.warn("⚠️ Pattern extraction failed:", error);
+      this.logger.warn("⚠️ Pattern extraction failed", error);
       return null;
     }
   }
 
   private applyPatterns(patterns: any): void {
-    console.log("📝 Applying extracted patterns for future improvements");
+    this.logger.info("📝 Applying extracted patterns for future improvements");
     // Store patterns for use in future improvements
     // This would typically update a pattern database or configuration
     // For now, just log them
     if (Array.isArray(patterns)) {
       patterns.forEach((pattern: any) => {
-        console.log(`  - ${pattern.name || pattern.description || pattern}`);
+        this.logger.debug(`  - ${pattern.name || pattern.description || pattern}`);
       });
     }
   }

@@ -31,8 +31,8 @@ export const ErrorType = {
  * @param {string} handlerName - Name of the handler for logging
  * @returns {Function} Wrapped handler with error handling
  */
-export function withErrorHandling(handler, handlerName) {
-  return async function wrappedHandler(args) {
+export function withErrorHandling(handler: any, handlerName: string) {
+  return async function wrappedHandler(args: any) {
     const logger = handlerLogger || serverLogger;
     const timer = logger.timer(`Handler: ${handlerName}`);
     
@@ -54,7 +54,7 @@ export function withErrorHandling(handler, handlerName) {
  * @param {Object} additionalInfo - Additional information for debugging
  * @returns {Object} Error response
  */
-export function handleError(error, context, additionalInfo = {}) {
+export function handleError(error: any, context: string, additionalInfo: any = {}) {
   const logger = handlerLogger || serverLogger;
   
   // Zod validation errors
@@ -115,8 +115,8 @@ export function handleError(error, context, additionalInfo = {}) {
  * @param {string} context - The context for error handling
  * @returns {Function} Error handler function
  */
-export function createErrorHandler(context) {
-  return (error, additionalInfo) => handleError(error, context, additionalInfo);
+export function createErrorHandler(context: string) {
+  return (error: any, additionalInfo: any) => handleError(error, context, additionalInfo);
 }
 
 /**
@@ -126,7 +126,7 @@ export function createErrorHandler(context) {
  * @param {number} initialDelay - Initial delay in milliseconds
  * @returns {Promise} Result of the function
  */
-export async function retryWithBackoff(fn, maxRetries = 3, initialDelay = 1000) {
+export async function retryWithBackoff(fn: any, maxRetries: number = 3, initialDelay: number = 1000): Promise<any> {
   let lastError;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -151,8 +151,8 @@ export async function retryWithBackoff(fn, maxRetries = 3, initialDelay = 1000) 
  * @param {Array<string>} requiredFields - Required field names
  * @throws {AppError} If validation fails
  */
-export function validateRequired(obj, requiredFields) {
-  const missing = requiredFields.filter(field => !obj[field]);
+export function validateRequired(obj: any, requiredFields: string[]): void {
+  const missing = requiredFields.filter((field: string) => !obj[field]);
   
   if (missing.length > 0) {
     throw new AppError(

@@ -1,4 +1,4 @@
-export async function addSuccessCriteria(prompt) {
+export async function addSuccessCriteria(prompt: string): Promise<string> {
   // Check if prompt already has success criteria
   if (/success criteria|acceptance criteria|definition of done/i.test(prompt)) {
     return prompt;

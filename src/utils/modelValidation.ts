@@ -9,10 +9,10 @@
  * @param {string} optimized - Optimized prompt
  * @returns {Object} Validation result with details
  */
-export function validateSemanticPreservation(original, optimized) {
+export function validateSemanticPreservation(original: string, optimized: string) {
   const validation = {
     passed: true,
-    issues: [],
+    issues: [] as string[],
     score: 100
   };
   
@@ -49,19 +49,19 @@ export function validateSemanticPreservation(original, optimized) {
  * @param {string} model - Target model
  * @returns {Object} Syntax validation result
  */
-export function validateModelSyntax(prompt, model) {
+export function validateModelSyntax(prompt: string, model: string) {
   const validation = {
     valid: true,
-    errors: [],
-    warnings: []
+    errors: [] as string[],
+    warnings: [] as string[]
   };
   
   switch (model) {
     case 'claude':
       // Validate XML structure
       const xmlTags = prompt.match(/<([^>]+)>/g) || [];
-      const openTags = xmlTags.filter(tag => !tag.startsWith('</'));
-      const closeTags = xmlTags.filter(tag => tag.startsWith('</'));
+      const openTags = xmlTags.filter((tag: string) => !tag.startsWith('</'));
+      const closeTags = xmlTags.filter((tag: string) => tag.startsWith('</'));
       
       if (openTags.length !== closeTags.length) {
         validation.valid = false;
@@ -145,11 +145,11 @@ export function validateModelSyntax(prompt, model) {
  * @param {Object} optimizationResult - Result from optimization
  * @returns {Object} Quality validation result
  */
-export function validateOptimizationQuality(optimizationResult) {
+export function validateOptimizationQuality(optimizationResult: any) {
   const validation = {
     meetsThreshold: true,
-    issues: [],
-    recommendations: []
+    issues: [] as string[],
+    recommendations: [] as string[]
   };
   
   // Check improvement count
@@ -188,7 +188,7 @@ export function validateOptimizationQuality(optimizationResult) {
  * @param {Object} metrics - Optimization metrics
  * @returns {Object} Comprehensive validation result
  */
-export function validateOptimization(original, optimized, model, metrics) {
+export function validateOptimization(original: string, optimized: string, model: string, metrics: any) {
   const result: any = {
     valid: true,
     semantic: validateSemanticPreservation(original, optimized),
@@ -228,12 +228,12 @@ export function validateOptimization(original, optimized, model, metrics) {
 /**
  * Extracts key entities from prompt
  */
-function extractKeyEntities(prompt) {
+function extractKeyEntities(prompt: string): string[] {
   const entities = [];
   
   // Extract quoted strings
   const quoted = prompt.match(/"([^"]+)"/g) || [];
-  entities.push(...quoted.map(q => q.replace(/"/g, '')));
+  entities.push(...quoted.map((q: string) => q.replace(/"/g, '')));
   
   // Extract capitalized terms
   const capitalized = prompt.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
@@ -253,7 +253,7 @@ function extractKeyEntities(prompt) {
 /**
  * Counts sentences in text
  */
-function countSentences(text) {
+function countSentences(text: string): number {
   const sentences = text.match(/[.!?]+/g) || [];
   return sentences.length || 1;
 }
@@ -261,7 +261,7 @@ function countSentences(text) {
 /**
  * Generates validation summary
  */
-function generateValidationSummary(result) {
+function generateValidationSummary(result: any): string {
   const lines = [];
   
   if (result.valid) {
@@ -296,7 +296,7 @@ function generateValidationSummary(result) {
  * @param {Object} validationResult - Validation result
  * @returns {boolean} Whether optimization is safe
  */
-export function isOptimizationSafe(validationResult) {
+export function isOptimizationSafe(validationResult: any): boolean {
   return validationResult.valid && 
          validationResult.overallScore >= 70 &&
          validationResult.syntax.errors.length === 0;

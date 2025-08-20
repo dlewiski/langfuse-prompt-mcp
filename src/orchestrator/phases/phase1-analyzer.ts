@@ -7,6 +7,7 @@ import {
   mcp__langfuse_prompt__track,
   mcp__langfuse_prompt__evaluate,
 } from "../../tools/mcp-tools.js";
+import { createModuleLogger } from "../../utils/structuredLogger.js";
 
 export interface Context {
   isReact: boolean;
@@ -25,8 +26,10 @@ export interface Phase1Results {
 }
 
 export class Phase1Analyzer {
+  private logger = createModuleLogger('Phase1Analyzer');
+
   async execute(prompt: string): Promise<Phase1Results> {
-    console.log("🐝 Phase 1: Parallel Initial Analysis");
+    this.logger.info("🐝 Phase 1: Parallel Initial Analysis");
 
     // Execute all analysis tasks in parallel
     const [tracking, evaluation, context] = await Promise.all([
@@ -47,7 +50,7 @@ export class Phase1Analyzer {
       const result = await mcp__langfuse_prompt__track(params);
       return result?.success ? result : { error: "Tracking failed" };
     } catch (error) {
-      console.warn("⚠️ Tracking failed:", error);
+      this.logger.warn("⚠️ Tracking failed", error);
       return null;
     }
   }
@@ -63,7 +66,7 @@ export class Phase1Analyzer {
       // Fallback to basic evaluation
       return this.simulateEvaluation(params.prompt);
     } catch (error) {
-      console.warn("⚠️ Evaluation failed:", error);
+      this.logger.warn("⚠️ Evaluation failed", error);
       return this.simulateEvaluation(params.prompt);
     }
   }

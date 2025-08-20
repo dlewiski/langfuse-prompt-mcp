@@ -5,7 +5,11 @@
 
 import type { ModelDetectionResult, ModelFeatures } from '../types/modelOptimizers.js';
 
-const MODEL_PATTERNS = {
+const MODEL_PATTERNS: Record<string, {
+  identifiers: string[];
+  patterns: RegExp[];
+  features: ModelFeatures;
+}> = {
   claude: {
     identifiers: [
       "claude",
@@ -248,7 +252,7 @@ function getModelFeatures(modelName: string): ModelFeatures {
  * @returns {boolean} Whether the technique is suitable
  */
 function isTechniqueSuitable(technique: string, features: ModelFeatures): boolean {
-  const techniqueRequirements = {
+  const techniqueRequirements: Record<string, string> = {
     xmlStructure: "supportsXML",
     thinkingTags: "supportsThinkingTags",
     prefilling: "supportsPrefilling",

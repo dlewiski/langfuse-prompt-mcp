@@ -34,7 +34,7 @@ export function generateRecommendations(scores: Record<string, ScoreData>): Reco
 }
 
 export function getRecommendation(criterion: string): string {
-  const recommendations = {
+  const recommendations: Record<string, string> = {
     clarity: 'Add explicit requirements using "MUST", "SHOULD", and "MAY". Be specific about expected behavior.',
     structure: 'Use XML tags or markdown sections to organize your prompt. Add clear hierarchical structure.',
     examples: 'Include 2-3 examples with input, reasoning, and expected output.',

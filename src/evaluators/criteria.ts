@@ -19,7 +19,7 @@ import {
   DEPLOY_PATTERNS,
 } from './constants.js';
 
-export function evaluateClarity(prompt) {
+export function evaluateClarity(prompt: string): number {
   let score = SCORING.BASE.CLARITY;
   
   if (CLARITY_PATTERNS.REQUIREMENT_WORDS.test(prompt)) {
@@ -39,7 +39,7 @@ export function evaluateClarity(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateStructure(prompt) {
+export function evaluateStructure(prompt: string): number {
   let score = SCORING.BASE.STRUCTURE;
   
   if (STRUCTURE_PATTERNS.XML_TAGS.test(prompt)) {
@@ -58,7 +58,7 @@ export function evaluateStructure(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateExamples(prompt) {
+export function evaluateExamples(prompt: string): number {
   const exampleMatches = prompt.match(EXAMPLE_PATTERNS.INDICATORS);
   const count = exampleMatches ? exampleMatches.length : 0;
   
@@ -70,7 +70,7 @@ export function evaluateExamples(prompt) {
   return TOO_MANY.score;
 }
 
-export function evaluateChainOfThought(prompt) {
+export function evaluateChainOfThought(prompt: string): number {
   let score = SCORING.BASE.CHAIN_OF_THOUGHT;
   
   if (CHAIN_PATTERNS.THINKING_TAGS.test(prompt)) {
@@ -86,7 +86,7 @@ export function evaluateChainOfThought(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateTechSpecificity(prompt) {
+export function evaluateTechSpecificity(prompt: string): number {
   let score = SCORING.BASE.TECH_SPECIFICITY;
   const matches = prompt.match(TECH_PATTERNS.TECH_TERMS);
   
@@ -103,7 +103,7 @@ export function evaluateTechSpecificity(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateErrorHandling(prompt) {
+export function evaluateErrorHandling(prompt: string): number {
   let score = SCORING.BASE.ERROR_HANDLING;
   
   if (ERROR_PATTERNS.ERROR_WORDS.test(prompt)) {
@@ -119,7 +119,7 @@ export function evaluateErrorHandling(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluatePerformance(prompt) {
+export function evaluatePerformance(prompt: string): number {
   let score = SCORING.BASE.PERFORMANCE;
   
   if (PERF_PATTERNS.PERFORMANCE_WORDS.test(prompt)) {
@@ -132,7 +132,7 @@ export function evaluatePerformance(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateTesting(prompt) {
+export function evaluateTesting(prompt: string): number {
   let score = SCORING.BASE.TESTING;
   
   if (TEST_PATTERNS.TEST_WORDS.test(prompt)) {
@@ -145,7 +145,7 @@ export function evaluateTesting(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateOutputFormat(prompt) {
+export function evaluateOutputFormat(prompt: string): number {
   let score = SCORING.BASE.OUTPUT_FORMAT;
   
   if (FORMAT_PATTERNS.FORMAT_WORDS.test(prompt)) {
@@ -161,7 +161,7 @@ export function evaluateOutputFormat(prompt) {
   return Math.min(score, SCORING.MAX_SCORE);
 }
 
-export function evaluateDeployment(prompt) {
+export function evaluateDeployment(prompt: string): number {
   let score = SCORING.BASE.DEPLOYMENT;
   
   if (DEPLOY_PATTERNS.DEPLOYMENT_WORDS.test(prompt)) {

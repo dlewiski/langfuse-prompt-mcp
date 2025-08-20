@@ -9,6 +9,7 @@
  */
 
 import orchestrator from "./queen-bee-orchestrator.js";
+import { createModuleLogger } from "../utils/structuredLogger.js";
 
 /**
  * Hook configuration for Claude Code integration
@@ -24,6 +25,7 @@ export interface HookConfiguration {
  * Integration class for connecting orchestrator to Claude Code
  */
 export class OrchestratorIntegration {
+  private static logger = createModuleLogger('OrchestratorIntegration');
   private static isInitialized = false;
   private static hookConfig: HookConfiguration = {
     enabled: true,
@@ -36,7 +38,7 @@ export class OrchestratorIntegration {
    */
   static async initialize(): Promise<void> {
     if (this.isInitialized) {
-      console.log("🐝 Orchestrator already initialized");
+      this.logger.info("🐝 Orchestrator already initialized");
       return;
     }
 
@@ -54,12 +56,10 @@ export class OrchestratorIntegration {
       this.setupEventListeners();
 
       this.isInitialized = true;
-      console.log(
-        "🐝 Queen Bee Orchestrator integration initialized successfully"
-      );
-      console.log("🐝 Auto-activation enabled for all prompts");
+      this.logger.info("🐝 Queen Bee Orchestrator integration initialized successfully");
+      this.logger.info("🐝 Auto-activation enabled for all prompts");
     } catch (error) {
-      console.error("🐝 Failed to initialize orchestrator integration:", error);
+      this.logger.error("🐝 Failed to initialize orchestrator integration", error);
       throw error;
     }
   }
@@ -93,10 +93,7 @@ export class OrchestratorIntegration {
       ],
     };
 
-    console.log(
-      "🐝 Registering prompt-manager as proactive agent:",
-      agentDefinition
-    );
+    this.logger.info("🐝 Registering prompt-manager as proactive agent", { agentDefinition });
   }
 
   /**
@@ -106,7 +103,7 @@ export class OrchestratorIntegration {
     // This would hook into Claude Code's prompt submission system
     // The actual implementation would depend on Claude Code's API
 
-    console.log("🐝 Setting up prompt interception hooks");
+    this.logger.info("🐝 Setting up prompt interception hooks");
 
     // Example of what the integration might look like:
     /*
@@ -160,10 +157,7 @@ export class OrchestratorIntegration {
       },
     ];
 
-    console.log(`🐝 Registering ${subAgents.length} sub-agents`);
-    subAgents.forEach((agent) => {
-      console.log(`  - ${agent.type}: ${agent.description}`);
-    });
+    this.logger.info(`🐝 Registering ${subAgents.length} sub-agents`, { subAgents });
   }
 
   /**
@@ -171,7 +165,7 @@ export class OrchestratorIntegration {
    */
   private static setupEventListeners(): void {
     // Listen for orchestrator events and log them
-    console.log("🐝 Setting up orchestrator event listeners");
+    this.logger.info("🐝 Setting up orchestrator event listeners");
   }
 
   // Note: shouldInterceptPrompt was removed as it was unused
@@ -181,13 +175,13 @@ export class OrchestratorIntegration {
    * Handle an intercepted prompt
    */
   static async handlePrompt(prompt: string, _context?: any): Promise<any> {
-    console.log("🐝 Intercepted prompt:", prompt.substring(0, 50) + "...");
+    this.logger.info("🐝 Intercepted prompt", { promptPreview: prompt.substring(0, 50) + "..." });
 
     try {
       // Pass to orchestrator for processing
       const result = await orchestrator.orchestrate(prompt);
 
-      console.log("🐝 Orchestration complete:", {
+      this.logger.info("🐝 Orchestration complete", {
         originalScore: result.originalScore,
         finalScore: result.finalScore,
         improved: result.improved,
@@ -196,7 +190,7 @@ export class OrchestratorIntegration {
 
       return result;
     } catch (error) {
-      console.error("🐝 Orchestration failed:", error);
+      this.logger.error("🐝 Orchestration failed", error);
       throw error;
     }
   }
@@ -206,7 +200,7 @@ export class OrchestratorIntegration {
    */
   static updateConfiguration(config: Partial<HookConfiguration>): void {
     this.hookConfig = { ...this.hookConfig, ...config };
-    console.log("🐝 Hook configuration updated:", this.hookConfig);
+    this.logger.info("🐝 Hook configuration updated", { hookConfig: this.hookConfig });
   }
 
   /**
@@ -224,7 +218,7 @@ export class OrchestratorIntegration {
    * Shutdown the integration
    */
   static async shutdown(): Promise<void> {
-    console.log("🐝 Shutting down orchestrator integration");
+    this.logger.info("🐝 Shutting down orchestrator integration");
     orchestrator.clearHistory();
     this.isInitialized = false;
   }
@@ -280,8 +274,9 @@ if (
   typeof process !== "undefined" &&
   process.env.AUTO_INIT_ORCHESTRATOR !== "false"
 ) {
+  const logger = createModuleLogger('OrchestratorIntegration');
   OrchestratorIntegration.initialize().catch((error) => {
-    console.error("🐝 Auto-initialization failed:", error);
+    logger.error("🐝 Auto-initialization failed", error);
   });
 }
 

@@ -1,4 +1,4 @@
-export async function addErrorHandling(prompt) {
+export async function addErrorHandling(prompt: string): Promise<string> {
   // Check if prompt already mentions error handling
   if (/error|exception|failure|edge case/i.test(prompt)) {
     return enhanceExistingErrorHandling(prompt);
@@ -34,7 +34,7 @@ For each error:
   return prompt + '\n' + errorSection;
 }
 
-function enhanceExistingErrorHandling(prompt) {
+function enhanceExistingErrorHandling(prompt: string): string {
   // If error handling is mentioned but not comprehensive
   const enhancement = `
 Additional error considerations:

@@ -92,7 +92,7 @@ describe('Model Detection', () => {
     
     expect(result.model).toBe('gemini');
     expect(result.confidence).toBeGreaterThan(0.5);
-    expect(result.features.supportsGrounding).toBe(true);
+    expect(result.features?.supportsGrounding).toBe(true);
   });
   
   it('should use explicit model specification', () => {

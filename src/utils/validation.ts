@@ -11,7 +11,7 @@
  * @param {number} maxLength - Maximum allowed length
  * @returns {string} Sanitized string
  */
-export function sanitizeString(input, maxLength = 10000) {
+export function sanitizeString(input: any, maxLength: number = 10000): string {
   if (typeof input !== 'string') {
     return '';
   }
@@ -28,7 +28,17 @@ export function sanitizeString(input, maxLength = 10000) {
  * @param {string} prompt - Prompt text
  * @returns {Object} Validation result
  */
-export function validatePrompt(prompt) {
+export function validatePrompt(prompt: any): { 
+  valid: boolean; 
+  errors: string[]; 
+  sanitized: string;
+  metadata?: {
+    originalLength: number;
+    sanitizedLength: number;
+    hasCode: boolean;
+    language: string | null;
+  }
+} {
   const errors = [];
   
   // Check basic validity
@@ -79,7 +89,7 @@ export function validatePrompt(prompt) {
  * @param {string} text - Text to analyze
  * @returns {string|null} Detected language or null
  */
-function detectLanguage(text) {
+function detectLanguage(text: string): string | null {
   const languagePatterns = [
     { lang: 'javascript', pattern: /\b(const|let|var|function|=>|async|await)\b/ },
     { lang: 'typescript', pattern: /\b(interface|type|enum|namespace|implements)\b/ },
@@ -105,15 +115,15 @@ function detectLanguage(text) {
  * @param {number} windowMs - Time window in milliseconds
  * @returns {Function} Rate limit checker
  */
-export function createRateLimiter(maxRequests = 10, windowMs = 60000) {
+export function createRateLimiter(maxRequests: number = 10, windowMs: number = 60000) {
   const requests = new Map();
 
-  return function checkRateLimit(identifier) {
+  return function checkRateLimit(identifier: string) {
     const now = Date.now();
     const userRequests = requests.get(identifier) || [];
     
     // Clean old requests
-    const validRequests = userRequests.filter(time => now - time < windowMs);
+    const validRequests = userRequests.filter((time: number) => now - time < windowMs);
     
     if (validRequests.length >= maxRequests) {
       return {
@@ -130,7 +140,7 @@ export function createRateLimiter(maxRequests = 10, windowMs = 60000) {
     // Clean up old identifiers periodically
     if (requests.size > 1000) {
       for (const [key, times] of requests.entries()) {
-        if (times.every(time => now - time >= windowMs)) {
+        if (times.every((time: number) => now - time >= windowMs)) {
           requests.delete(key);
         }
       }
@@ -148,7 +158,12 @@ export function createRateLimiter(maxRequests = 10, windowMs = 60000) {
  * Validate environment configuration
  * @returns {Object} Validation result with missing variables
  */
-export function validateEnvironment() {
+export function validateEnvironment(): { 
+  valid: boolean; 
+  missing: string[];
+  warnings: string[];
+  configured: string[];
+} {
   const required = [
     'LANGFUSE_PUBLIC_KEY',
     'LANGFUSE_SECRET_KEY',

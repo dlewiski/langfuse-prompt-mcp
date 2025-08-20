@@ -37,13 +37,7 @@ const validateConfig = (): boolean => {
     return false;
   }
   
-  // Validate format (basic check)
-  if (process.env.LANGFUSE_PUBLIC_KEY?.length !== 24 || 
-      process.env.LANGFUSE_SECRET_KEY?.length !== 24) {
-    configLogger.warn('Invalid Langfuse key format detected');
-    return false;
-  }
-  
+  // Keys are present, let Langfuse handle validation
   return true;
 };
 
