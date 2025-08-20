@@ -228,7 +228,7 @@ function detectModel({ prompt = "", model = "", metadata = {} }: DetectModelPara
 function getModelFeatures(modelName: string): ModelFeatures {
   const normalizedName = modelName.toLowerCase();
 
-  for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
+  for (const [_modelKey, config] of Object.entries(MODEL_PATTERNS)) {
     if (config.identifiers.some((id) => normalizedName.includes(id))) {
       return config.features as ModelFeatures;
     }

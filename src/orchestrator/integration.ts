@@ -174,41 +174,13 @@ export class OrchestratorIntegration {
     console.log("🐝 Setting up orchestrator event listeners");
   }
 
-  /**
-   * Check if a prompt should be intercepted
-   */
-  private static shouldInterceptPrompt(prompt: string): boolean {
-    if (!this.hookConfig.enabled) {
-      return false;
-    }
-
-    if (this.hookConfig.interceptAll) {
-      return true;
-    }
-
-    // Check include patterns
-    if (this.hookConfig.patterns) {
-      const matches = this.hookConfig.patterns.some((pattern) =>
-        pattern.test(prompt)
-      );
-      if (!matches) return false;
-    }
-
-    // Check exclude patterns
-    if (this.hookConfig.excludePatterns) {
-      const excluded = this.hookConfig.excludePatterns.some((pattern) =>
-        pattern.test(prompt)
-      );
-      if (excluded) return false;
-    }
-
-    return true;
-  }
+  // Note: shouldInterceptPrompt was removed as it was unused
+  // The interception logic can be implemented when needed
 
   /**
    * Handle an intercepted prompt
    */
-  static async handlePrompt(prompt: string, context?: any): Promise<any> {
+  static async handlePrompt(prompt: string, _context?: any): Promise<any> {
     console.log("🐝 Intercepted prompt:", prompt.substring(0, 50) + "...");
 
     try {

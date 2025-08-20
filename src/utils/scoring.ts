@@ -66,7 +66,7 @@ export function calculateWeightedAverage(scores: Record<string, any>): number {
   let totalScore = 0;
   let totalWeight = 0;
 
-  for (const [key, data] of Object.entries(scores)) {
+  for (const [_key, data] of Object.entries(scores)) {
     const scoreData = data as { score?: number; weight?: number; weighted?: number };
     if (scoreData.score !== undefined && scoreData.weight !== undefined) {
       totalScore += scoreData.score * scoreData.weight;

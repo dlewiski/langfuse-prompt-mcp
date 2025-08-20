@@ -30,7 +30,7 @@ interface CriterionDifference {
  */
 export async function handleCompare(
   args: unknown,
-  context?: MCPRequestContext
+  _context?: MCPRequestContext
 ): Promise<ReturnType<typeof successResponse | typeof errorResponse | typeof llmTaskResponse>> {
   try {
     // Validate input

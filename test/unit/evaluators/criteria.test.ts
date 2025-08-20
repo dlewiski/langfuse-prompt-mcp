@@ -4,7 +4,7 @@
  * Tests the individual criterion evaluators for prompt assessment.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   evaluateClarity,
   evaluateStructure,

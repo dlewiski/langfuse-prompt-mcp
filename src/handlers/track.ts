@@ -9,12 +9,10 @@ import { TrackSchema, type TrackInput } from '../tools/schemas.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
 import type { 
-  TrackedPrompt, 
   PromptMetadata 
 } from '../types/domain.js';
 import type { 
-  LangfuseClient,
-  LangfuseTrace 
+  LangfuseClient
 } from '../types/langfuse.js';
 import type { MCPRequestContext } from '../types/mcp.js';
 

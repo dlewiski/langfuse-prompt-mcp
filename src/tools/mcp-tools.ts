@@ -6,7 +6,7 @@
 // These are placeholder functions that would integrate with the actual MCP tools
 // In reality, these would call the MCP server's tool handlers
 
-export async function mcp__langfuse_prompt__track(params: {
+export async function mcp__langfuse_prompt__track(_params: {
   prompt: string;
   metadata?: any;
   category?: string;
@@ -21,7 +21,7 @@ export async function mcp__langfuse_prompt__track(params: {
   };
 }
 
-export async function mcp__langfuse_prompt__evaluate(params: {
+export async function mcp__langfuse_prompt__evaluate(_params: {
   prompt: string;
   promptId?: string;
 }): Promise<any> {
@@ -53,7 +53,7 @@ export async function mcp__langfuse_prompt__improve(params: {
   };
 }
 
-export async function mcp__langfuse_prompt__patterns(params: {
+export async function mcp__langfuse_prompt__patterns(_params: {
   limit?: number;
   minScore?: number;
 }): Promise<any> {
@@ -69,7 +69,7 @@ export async function mcp__langfuse_prompt__patterns(params: {
   };
 }
 
-export async function mcp__langfuse_prompt__compare(params: {
+export async function mcp__langfuse_prompt__compare(_params: {
   prompt1: string;
   prompt2: string;
   promptId?: string;

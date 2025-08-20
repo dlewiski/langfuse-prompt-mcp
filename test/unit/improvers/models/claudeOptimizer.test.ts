@@ -3,8 +3,8 @@
  * Comprehensive test suite for Claude-specific prompt optimizations
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { ClaudeOptimizerOptions, OptimizerResult } from '../../../../src/types/modelOptimizers.js';
+import { describe, it, expect } from 'vitest';
+import type { ClaudeOptimizerOptions } from '../../../../src/types/modelOptimizers.js';
 
 // Import the actual implementation to test
 import { optimizeForClaude } from '../../../../src/improvers/models/claudeOptimizer.js';

@@ -9,8 +9,8 @@ import type { PatternAnalysisResult } from '../types/domain.js';
  * Extract patterns from high-scoring prompts
  */
 export async function extractPatterns(
-  minScore: number,
-  limit: number
+  _minScore: number,
+  _limit: number
 ): Promise<PatternAnalysisResult> {
   // Stub implementation
   return {

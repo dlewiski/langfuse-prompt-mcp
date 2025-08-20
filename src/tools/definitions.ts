@@ -3,7 +3,6 @@
  * Comprehensive tool schemas for the Langfuse prompt MCP server
  */
 
-import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import type { MCPTool, MCPToolName } from '../types/mcp.js';
 
 /**

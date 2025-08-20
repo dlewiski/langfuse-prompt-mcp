@@ -40,7 +40,8 @@ interface OrchestratorConfig {
 export class QueenBeeOrchestrator {
   private config: OrchestratorConfig;
   private static instance: QueenBeeOrchestrator | null = null;
-  private promptHistory: any[] = [];
+  // Prompt history tracking removed as it was unused
+  // Can be re-added when needed for history functionality
   
   // Phase handlers
   private phase1: Phase1Analyzer;
@@ -262,7 +263,7 @@ export class QueenBeeOrchestrator {
    * Clear prompt history
    */
   clearHistory(): void {
-    this.promptHistory = [];
+    // History tracking to be implemented when needed
   }
 }
 

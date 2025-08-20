@@ -1,5 +1,4 @@
 import { needsImprovement } from '../utils/scoring.js';
-import { SCORE_THRESHOLDS } from '../constants.js';
 
 interface ScoreData {
   score: number;

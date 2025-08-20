@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { ImprovementResult } from '../src/types/domain.js';
+// ImprovementResult type import removed as unused
 
 // Import actual business logic functions
 import { detectModel, getModelFeatures } from '../src/improvers/modelDetector.js';
@@ -17,7 +17,6 @@ import {
   evaluateClarity,
   evaluateStructure,
   evaluateExamples,
-  evaluateChainOfThought,
   evaluateTechSpecificity
 } from '../src/evaluators/criteria.js';
 import { calculateWeightedAverage } from '../src/utils/scoring.js';

@@ -9,9 +9,9 @@ import type { EvaluationResult } from '../types/domain.js';
  * Evaluate a prompt
  */
 export async function evaluatePrompt(
-  prompt: string,
-  promptId?: string,
-  useLLM: boolean = false
+  _prompt: string,
+  _promptId?: string,
+  _useLLM: boolean = false
 ): Promise<EvaluationResult | any> {
   // Stub implementation
   return {
@@ -23,6 +23,6 @@ export async function evaluatePrompt(
     weaknesses: [],
     prioritizedImprovements: [],
     evaluationType: 'rule-based' as const,
-    promptId,
+    promptId: _promptId,
   };
 }

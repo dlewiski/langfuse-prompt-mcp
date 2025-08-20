@@ -94,7 +94,7 @@ function optimizeForGemini(prompt: string, options: GeminiOptimizerOptions = {})
 /**
  * Adds safety configuration for Gemini
  */
-function addSafetyConfiguration(prompt: string, options: GeminiOptimizerOptions): { prompt: string; changed: boolean; configuration: any } {
+function addSafetyConfiguration(prompt: string, _options: GeminiOptimizerOptions): { prompt: string; changed: boolean; configuration: any } {
   const taskType = detectTaskType(prompt);
   
   const safetySettings = {

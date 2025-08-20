@@ -3,8 +3,8 @@
  * Comprehensive test suite for Gemini-specific prompt optimizations
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { GeminiOptimizerOptions, OptimizerResult } from '../../../../src/types/modelOptimizers.js';
+import { describe, it, expect } from 'vitest';
+import type { GeminiOptimizerOptions } from '../../../../src/types/modelOptimizers.js';
 
 // Import the actual implementation to test
 import { optimizeForGemini } from '../../../../src/improvers/models/geminiOptimizer.js';

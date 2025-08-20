@@ -2,10 +2,8 @@
  * Tests for Model-Specific Optimization System
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Mock } from 'vitest';
-import type { TargetModel, ImprovementResult } from '../src/types/domain.js';
-import type { OptimizerResult, ClaudeOptimizerOptions, GPTOptimizerOptions, GeminiOptimizerOptions } from '../src/types/modelOptimizers.js';
+import { describe, it, expect } from 'vitest';
+import type { ClaudeOptimizerOptions } from '../src/types/modelOptimizers.js';
 
 // Import actual functions to test
 import { detectModel, getModelFeatures, isTechniqueSuitable } from '../src/improvers/modelDetector.js';

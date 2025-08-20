@@ -18,7 +18,7 @@ import type { MCPRequestContext } from '../types/mcp.js';
  */
 export async function handlePatterns(
   args: unknown,
-  context?: MCPRequestContext
+  _context?: MCPRequestContext
 ): Promise<ReturnType<typeof successResponse | typeof errorResponse>> {
   try {
     // Validate input with defaults

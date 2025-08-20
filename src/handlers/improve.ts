@@ -14,10 +14,8 @@ import {
   isLLMTaskResponse 
 } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
-import { IMPROVEMENT, LLM_ACTIONS } from '../constants.js';
 import type { 
   EvaluationResult,
-  ImprovementResult,
   ImprovementTechnique,
   TargetModel
 } from '../types/domain.js';
@@ -63,7 +61,7 @@ interface ImprovementResponse {
  */
 export async function handleImprove(
   args: unknown,
-  context?: MCPRequestContext
+  _context?: MCPRequestContext
 ): Promise<ReturnType<typeof successResponse | typeof errorResponse | typeof llmTaskResponse>> {
   const { 
     prompt, 

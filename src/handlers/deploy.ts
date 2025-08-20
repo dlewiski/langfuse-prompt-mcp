@@ -7,7 +7,7 @@ import { DeploySchema, type DeployInput } from '../tools/schemas.js';
 import { langfuse } from '../config/index.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { handlerLogger } from '../utils/logger.js';
-import type { LangfuseDeployment } from '../types/domain.js';
+// LangfuseDeployment type import removed as unused
 import type { MCPRequestContext } from '../types/mcp.js';
 
 /**
@@ -28,7 +28,7 @@ interface DeploymentResponse {
  */
 export async function handleDeploy(
   args: unknown,
-  context?: MCPRequestContext
+  _context?: MCPRequestContext
 ): Promise<ReturnType<typeof successResponse | typeof errorResponse>> {
   try {
     // Validate input
@@ -49,19 +49,8 @@ export async function handleDeploy(
     // Determine environment from label
     const environment = detectEnvironment(label);
     
-    // Create deployment configuration
-    const deployment: LangfuseDeployment = {
-      promptId,
-      version,
-      label,
-      environment,
-      metadata: {
-        deployedAt: new Date().toISOString(),
-        deployedBy: context?.userId || 'mcp-server',
-        sessionId: context?.sessionId,
-        ...context?.metadata,
-      },
-    };
+    // Deployment configuration would be created here in production
+    // const deployment: LangfuseDeployment = { ... }
     
     // Simulate deployment (actual Langfuse deployment would go here)
     // Note: The actual Langfuse SDK implementation would vary
@@ -116,50 +105,8 @@ function detectEnvironment(label: string): 'development' | 'staging' | 'producti
   return 'production';
 }
 
-/**
- * Validate deployment prerequisites
- */
-async function validateDeployment(
-  promptId: string,
-  version: string
-): Promise<{ valid: boolean; error?: string }> {
-  // In a real implementation, this would:
-  // 1. Check if prompt exists
-  // 2. Check if version exists
-  // 3. Check if version has been tested
-  // 4. Check deployment permissions
-  
-  // Mock validation
-  if (!promptId || !version) {
-    return { 
-      valid: false, 
-      error: 'Prompt ID and version are required' 
-    };
-  }
-  
-  return { valid: true };
-}
-
-/**
- * Create rollback plan
- */
-interface RollbackPlan {
-  previousVersion: string;
-  previousLabel: string;
-  rollbackCommand: string;
-}
-
-function createRollbackPlan(
-  promptId: string,
-  previousVersion: string,
-  label: string
-): RollbackPlan {
-  return {
-    previousVersion,
-    previousLabel: label,
-    rollbackCommand: `deploy --promptId "${promptId}" --version "${previousVersion}" --label "${label}"`,
-  };
-}
+// Note: validateDeployment and createRollbackPlan functions removed as they were unused
+// These would be implemented when actual deployment functionality is added
 
 /**
  * Export handler metadata

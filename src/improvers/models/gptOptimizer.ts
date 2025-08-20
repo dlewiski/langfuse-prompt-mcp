@@ -91,7 +91,7 @@ function optimizeForGPT(prompt: string, options: GPTOptimizerOptions = {}): Opti
 /**
  * Creates an optimized system message
  */
-function createSystemMessage(prompt: string, options: GPTOptimizerOptions): { prompt: string; changed: boolean } {
+function createSystemMessage(prompt: string, _options: GPTOptimizerOptions): { prompt: string; changed: boolean } {
   // Check if already formatted as system/user messages
   if (prompt.includes('"role": "system"') || prompt.startsWith('System:')) {
     return { prompt, changed: false };
@@ -148,7 +148,7 @@ function createSystemMessage(prompt: string, options: GPTOptimizerOptions): { pr
 /**
  * Adds response format schema for structured outputs
  */
-function addResponseFormat(prompt: string, options: GPTOptimizerOptions): string {
+function addResponseFormat(prompt: string, _options: GPTOptimizerOptions): string {
   // Detect what kind of output is expected
   const outputIndicators = {
     json: /json|object|dictionary|data structure/i,
@@ -229,7 +229,7 @@ function addResponseFormat(prompt: string, options: GPTOptimizerOptions): string
 /**
  * Adds few-shot learning examples
  */
-function addFewShotExamples(prompt: string, options: GPTOptimizerOptions): string {
+function addFewShotExamples(prompt: string, _options: GPTOptimizerOptions): string {
   const exampleFormat = `
 ## Examples
 
@@ -284,7 +284,7 @@ Use these functions when appropriate to complete the task.`;
 /**
  * Adds parameter optimization hints
  */
-function addParameterHints(prompt: string, options: GPTOptimizerOptions): { prompt: string; changed: boolean; parameters?: any } {
+function addParameterHints(prompt: string, _options: GPTOptimizerOptions): { prompt: string; changed: boolean; parameters?: any } {
   const complexity = detectComplexity(prompt);
   
   const parameters = {

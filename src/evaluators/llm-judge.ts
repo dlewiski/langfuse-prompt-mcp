@@ -8,7 +8,7 @@ import type { EvaluationResult } from '../types/domain.js';
 /**
  * Parse LLM evaluation results
  */
-export function parseLLMEvaluation(result: string): EvaluationResult {
+export function parseLLMEvaluation(_result: string): EvaluationResult {
   // Stub implementation - creates empty scores for all criteria
   const scores: any = {};
   

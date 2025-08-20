@@ -5,11 +5,9 @@
 
 import { EvaluateSchema, type EvaluateInput } from '../tools/schemas.js';
 import { evaluatePrompt } from '../evaluators/index.js';
-import { parseLLMEvaluation } from '../evaluators/llm-judge.js';
 import { 
   successResponse, 
   llmTaskResponse, 
-  isLLMTaskResponse,
   type LLMTask 
 } from '../utils/response.js';
 import type { EvaluationResult } from '../types/domain.js';
@@ -39,7 +37,7 @@ type EvaluationResponse = RuleBasedEvaluationResponse | LLMEvaluationResponse | 
  */
 export async function handleEvaluate(
   args: unknown,
-  context?: MCPRequestContext
+  _context?: MCPRequestContext
 ): Promise<ReturnType<typeof successResponse | typeof llmTaskResponse>> {
   // Validate input
   const { prompt, promptId }: EvaluateInput = EvaluateSchema.parse(args);

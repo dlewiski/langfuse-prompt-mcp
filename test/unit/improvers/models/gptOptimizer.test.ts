@@ -3,8 +3,8 @@
  * Comprehensive test suite for GPT-specific prompt optimizations
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { GPTOptimizerOptions, OptimizerResult } from '../../../../src/types/modelOptimizers.js';
+import { describe, it, expect } from 'vitest';
+import type { GPTOptimizerOptions } from '../../../../src/types/modelOptimizers.js';
 
 // Import the actual implementation to test
 import { optimizeForGPT } from '../../../../src/improvers/models/gptOptimizer.js';
