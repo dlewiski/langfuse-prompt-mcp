@@ -3,6 +3,8 @@
  * Identifies the target AI model from prompt content and metadata
  */
 
+import type { ModelDetectionResult, ModelFeatures } from '../types/modelOptimizers.js';
+
 const MODEL_PATTERNS = {
   claude: {
     identifiers: [
@@ -29,7 +31,7 @@ const MODEL_PATTERNS = {
       supportsPrefilling: true,
       supportsThinkingTags: true,
       maxContextWindow: 200000,
-      preferredStructure: "xml",
+      preferredStructure: "xml" as const,
     },
   },
   gpt: {
@@ -57,7 +59,7 @@ const MODEL_PATTERNS = {
       supportsFunctionCalling: true,
       supportsResponseFormat: true,
       maxContextWindow: 128000,
-      preferredStructure: "json",
+      preferredStructure: "json" as const,
     },
   },
   gemini: {
@@ -83,25 +85,31 @@ const MODEL_PATTERNS = {
       supportsContextCaching: true,
       supportsSafetySettings: true,
       maxContextWindow: 2000000,
-      preferredStructure: "markdown",
+      preferredStructure: "markdown" as const,
     },
   },
 };
 
+interface DetectModelParams {
+  prompt?: string;
+  model?: string;
+  metadata?: any;
+}
+
 /**
  * Detects the target model from various inputs
- * @param {Object} params - Detection parameters
- * @param {string} params.prompt - The prompt text to analyze
- * @param {string} [params.model] - Explicit model specification
- * @param {Object} [params.metadata] - Additional metadata
- * @returns {Object} Detection result with model info and confidence
+ * @param {DetectModelParams} params - Detection parameters
+ * @returns {ModelDetectionResult} Detection result with model info and confidence
  */
-function detectModel({ prompt = "", model = "", metadata = {} }) {
-  const results = {
-    detectedModel: null,
-    confidence: 0,
-    features: {},
-    reasoning: [],
+function detectModel({ prompt = "", model = "", metadata = {} }: DetectModelParams): ModelDetectionResult {
+  // Build the result with all required properties
+  let detectedModel: 'claude' | 'gpt' | 'gemini' | 'generic' = 'generic';
+  let confidence = 0;
+  const signals: string[] = [];
+  const features = {
+    supportsMarkdown: true,
+    supportsJSON: true,
+    preferredStructure: "markdown" as const
   };
 
   // Check explicit model specification first
@@ -109,11 +117,15 @@ function detectModel({ prompt = "", model = "", metadata = {} }) {
     const normalizedModel = model.toLowerCase();
     for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
       if (config.identifiers.some((id) => normalizedModel.includes(id))) {
-        results.detectedModel = modelKey;
-        results.confidence = 0.95;
-        results.features = config.features;
-        results.reasoning.push(`Explicit model specification: ${model}`);
-        return results;
+        detectedModel = modelKey as 'claude' | 'gpt' | 'gemini';
+        confidence = 1;
+        signals.push(`explicit: ${model}`);
+        return {
+          model: detectedModel,
+          confidence,
+          signals,
+          features: config.features
+        };
       }
     }
   }
@@ -127,17 +139,21 @@ function detectModel({ prompt = "", model = "", metadata = {} }) {
     ).toLowerCase();
     for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
       if (config.identifiers.some((id) => metaModel.includes(id))) {
-        results.detectedModel = modelKey;
-        results.confidence = 0.9;
-        results.features = config.features;
-        results.reasoning.push(`Metadata indicates: ${metaModel}`);
-        return results;
+        detectedModel = modelKey as 'claude' | 'gpt' | 'gemini';
+        confidence = 0.9;
+        signals.push(`metadata: ${metaModel}`);
+        return {
+          model: detectedModel,
+          confidence,
+          signals,
+          features: config.features
+        };
       }
     }
   }
 
   // Pattern-based detection from prompt content
-  const scores = {};
+  const scores: Record<string, number> = {};
 
   for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
     scores[modelKey] = 0;
@@ -149,7 +165,7 @@ function detectModel({ prompt = "", model = "", metadata = {} }) {
     scores[modelKey] += identifierMatches.length * 0.3;
 
     if (identifierMatches.length > 0) {
-      results.reasoning.push(
+      signals.push(
         `Found ${modelKey} identifiers: ${identifierMatches.join(", ")}`
       );
     }
@@ -161,7 +177,7 @@ function detectModel({ prompt = "", model = "", metadata = {} }) {
     scores[modelKey] += patternMatches.length * 0.2;
 
     if (patternMatches.length > 0) {
-      results.reasoning.push(
+      signals.push(
         `Matched ${modelKey} patterns: ${patternMatches.length} patterns`
       );
     }
@@ -169,47 +185,52 @@ function detectModel({ prompt = "", model = "", metadata = {} }) {
 
   // Find the highest scoring model
   let maxScore = 0;
-  let detectedModel = null;
+  let bestModel = null;
 
   for (const [modelKey, score] of Object.entries(scores)) {
     if (score > maxScore) {
       maxScore = score;
-      detectedModel = modelKey;
+      bestModel = modelKey;
     }
   }
 
-  if (detectedModel && maxScore > 0.2) {
-    results.detectedModel = detectedModel;
-    results.confidence = Math.min(maxScore, 0.85);
-    results.features = MODEL_PATTERNS[detectedModel].features;
-  } else {
-    // Default to generic optimization if no specific model detected
-    results.detectedModel = "generic";
-    results.confidence = 0.3;
-    results.features = {
-      supportsMarkdown: true,
-      supportsJSON: true,
-      preferredStructure: "markdown",
+  if (bestModel && maxScore > 0.2) {
+    detectedModel = bestModel as 'claude' | 'gpt' | 'gemini';
+    confidence = Math.min(maxScore, 0.85);
+    signals.push(`pattern-scores: ${JSON.stringify(scores)}`);
+    const modelFeatures = MODEL_PATTERNS[bestModel]?.features || features;
+    return {
+      model: detectedModel,
+      confidence,
+      signals,
+      features: modelFeatures
     };
-    results.reasoning.push(
+  } else {
+    // Default to generic if no specific model detected
+    confidence = 0.3;
+    signals.push(
       "No specific model detected, using generic optimization"
     );
+    return {
+      model: 'generic',
+      confidence,
+      signals,
+      features
+    };
   }
-
-  return results;
 }
 
 /**
  * Gets the feature set for a specific model
  * @param {string} modelName - The model name
- * @returns {Object} Feature set for the model
+ * @returns {ModelFeatures} Feature set for the model
  */
-function getModelFeatures(modelName) {
+function getModelFeatures(modelName: string): ModelFeatures {
   const normalizedName = modelName.toLowerCase();
 
   for (const [modelKey, config] of Object.entries(MODEL_PATTERNS)) {
     if (config.identifiers.some((id) => normalizedName.includes(id))) {
-      return config.features;
+      return config.features as ModelFeatures;
     }
   }
 
@@ -222,13 +243,11 @@ function getModelFeatures(modelName) {
 
 /**
  * Determines if a specific optimization technique is suitable for a model
- * @param {string} model - The model name
  * @param {string} technique - The optimization technique
+ * @param {ModelFeatures} features - The model features object
  * @returns {boolean} Whether the technique is suitable
  */
-function isTechniqueSuitable(model, technique) {
-  const features = getModelFeatures(model);
-
+function isTechniqueSuitable(technique: string, features: ModelFeatures): boolean {
   const techniqueRequirements = {
     xmlStructure: "supportsXML",
     thinkingTags: "supportsThinkingTags",

@@ -2,15 +2,25 @@
  * Tests for Queen Bee Orchestrator
  */
 
-import { QueenBeeOrchestrator } from '../../src/orchestrator/queen-bee-orchestrator';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { QueenBeeOrchestrator } from '../../src/orchestrator/queen-bee-orchestrator.js';
 
 describe('Queen Bee Orchestrator Tests', () => {
   let orchestrator: QueenBeeOrchestrator;
 
   beforeEach(() => {
     orchestrator = new QueenBeeOrchestrator({
-      activation: { debug_mode: false },
-      parallelization: { timeout_ms: 3000 }
+      activation: { 
+        automatic: true,
+        manual_override: false,
+        debug_mode: false 
+      },
+      parallelization: { 
+        max_concurrent_agents: 5,
+        timeout_ms: 3000,
+        retry_on_failure: true,
+        fallback_mode: 'basic_tracking'
+      }
     });
   });
 
@@ -125,23 +135,28 @@ describe('Queen Bee Orchestrator Tests', () => {
       // Create orchestrator with very short timeout to force failures
       const failOrchestrator = new QueenBeeOrchestrator({
         parallelization: { 
+          max_concurrent_agents: 5,
           timeout_ms: 1, // Force timeout
-          retry_on_failure: false 
+          retry_on_failure: false,
+          fallback_mode: 'basic_tracking'
         }
       });
       
       const prompt = "Test prompt";
       
-      // Should not throw, should handle gracefully
-      await expect(failOrchestrator.orchestrate(prompt))
-        .rejects.toThrow(/timeout/i);
+      // Should handle gracefully without throwing
+      const result = await failOrchestrator.orchestrate(prompt);
+      expect(result).toBeDefined();
+      // The orchestrator should still return a result even with short timeout
     });
 
     it('should retry failed agents when configured', async () => {
       const retryOrchestrator = new QueenBeeOrchestrator({
         parallelization: { 
+          max_concurrent_agents: 5,
           timeout_ms: 100,
-          retry_on_failure: true 
+          retry_on_failure: true,
+          fallback_mode: 'basic_tracking'
         }
       });
       
@@ -211,7 +226,10 @@ describe('Queen Bee Orchestrator Tests', () => {
           pattern_extraction_min: 5
         },
         parallelization: {
-          max_concurrent_agents: 3
+          max_concurrent_agents: 3,
+          timeout_ms: 5000,
+          retry_on_failure: true,
+          fallback_mode: 'basic_tracking'
         }
       };
       

@@ -14,3 +14,7 @@ export type * from './domain.js';
 // Export Langfuse types
 export * from './langfuse.js';
 export type * from './langfuse.js';
+
+// Export Model Optimizer types
+export * from './modelOptimizers.js';
+export type * from './modelOptimizers.js';

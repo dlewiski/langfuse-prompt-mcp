@@ -62,17 +62,18 @@ export function needsImprovement(score) {
  * @param {Object} scores - Object with score and weight properties
  * @returns {number} Weighted average
  */
-export function calculateWeightedAverage(scores) {
+export function calculateWeightedAverage(scores: Record<string, any>): number {
   let totalScore = 0;
   let totalWeight = 0;
 
   for (const [key, data] of Object.entries(scores)) {
-    if (data.score !== undefined && data.weight !== undefined) {
-      totalScore += data.score * data.weight;
-      totalWeight += data.weight;
-    } else if (data.score !== undefined && data.weighted !== undefined) {
-      totalScore += data.weighted;
-      totalWeight += (data.weighted / data.score) || 1;
+    const scoreData = data as { score?: number; weight?: number; weighted?: number };
+    if (scoreData.score !== undefined && scoreData.weight !== undefined) {
+      totalScore += scoreData.score * scoreData.weight;
+      totalWeight += scoreData.weight;
+    } else if (scoreData.score !== undefined && scoreData.weighted !== undefined) {
+      totalScore += scoreData.weighted;
+      totalWeight += (scoreData.weighted / scoreData.score) || 1;
     }
   }
 
@@ -85,15 +86,22 @@ export function calculateWeightedAverage(scores) {
  * @param {number} n - Number of top criteria to return
  * @returns {Array} Top criteria sorted by score
  */
-export function getTopCriteria(scores, n = 3) {
+export function getTopCriteria(scores: Record<string, any>, n = 3) {
   return Object.entries(scores)
-    .sort(([, a], [, b]) => (b.score || 0) - (a.score || 0))
+    .sort(([, a], [, b]) => {
+      const scoreA = (a as any).score || 0;
+      const scoreB = (b as any).score || 0;
+      return scoreB - scoreA;
+    })
     .slice(0, n)
-    .map(([criterion, data]) => ({
-      criterion,
-      score: data.score,
-      description: data.description,
-    }));
+    .map(([criterion, data]) => {
+      const scoreData = data as { score?: number; description?: string };
+      return {
+        criterion,
+        score: scoreData.score,
+        description: scoreData.description,
+      };
+    });
 }
 
 /**
@@ -102,15 +110,22 @@ export function getTopCriteria(scores, n = 3) {
  * @param {number} n - Number of bottom criteria to return
  * @returns {Array} Bottom criteria sorted by score (ascending)
  */
-export function getBottomCriteria(scores, n = 3) {
+export function getBottomCriteria(scores: Record<string, any>, n = 3) {
   return Object.entries(scores)
-    .sort(([, a], [, b]) => (a.score || 0) - (b.score || 0))
+    .sort(([, a], [, b]) => {
+      const scoreA = (a as any).score || 0;
+      const scoreB = (b as any).score || 0;
+      return scoreA - scoreB;
+    })
     .slice(0, n)
-    .map(([criterion, data]) => ({
-      criterion,
-      score: data.score,
-      description: data.description,
-    }));
+    .map(([criterion, data]) => {
+      const scoreData = data as { score?: number; description?: string };
+      return {
+        criterion,
+        score: scoreData.score,
+        description: scoreData.description,
+      };
+    });
 }
 
 /**
@@ -118,8 +133,8 @@ export function getBottomCriteria(scores, n = 3) {
  * @param {Object} scores - Scores object
  * @returns {Object} Scores grouped by quality level
  */
-export function groupByQuality(scores) {
-  const grouped = {
+export function groupByQuality(scores: Record<string, any>) {
+  const grouped: Record<string, Array<{ criterion: string; score?: number; description?: string }>> = {
     excellent: [],
     good: [],
     moderate: [],
@@ -129,11 +144,12 @@ export function groupByQuality(scores) {
   };
 
   for (const [criterion, data] of Object.entries(scores)) {
-    const level = classifyScore(data.score || 0);
+    const scoreData = data as { score?: number; description?: string };
+    const level = classifyScore(scoreData.score || 0);
     grouped[level].push({
       criterion,
-      score: data.score,
-      description: data.description,
+      score: scoreData.score,
+      description: scoreData.description,
     });
   }
 

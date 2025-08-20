@@ -3,13 +3,15 @@
  * Optimizations tailored for Anthropic's Claude models
  */
 
+import type { ClaudeOptimizerOptions, OptimizerResult } from '../../types/modelOptimizers.js';
+
 /**
  * Applies Claude-specific optimizations to a prompt
  * @param {string} prompt - Base-improved prompt
- * @param {Object} options - Claude-specific options
- * @returns {Object} Claude-optimized prompt with metadata
+ * @param {ClaudeOptimizerOptions} options - Claude-specific options
+ * @returns {OptimizerResult} Claude-optimized prompt with metadata
  */
-function optimizeForClaude(prompt, options = {}) {
+function optimizeForClaude(prompt: string, options: ClaudeOptimizerOptions = {}): OptimizerResult {
   const optimizations = [];
   let optimizedPrompt = prompt;
   
@@ -69,14 +71,16 @@ function optimizeForClaude(prompt, options = {}) {
   }
   
   return {
-    prompt: optimizedPrompt,
+    optimizedPrompt,
     optimizations,
-    model: 'claude',
-    features: {
-      usesXML: true,
-      usesThinking: options.complexity === 'high',
-      usesPrefilling: options.enablePrefilling !== false,
-      usesArtifacts: options.generateArtifacts || detectArtifactNeed(prompt)
+    metadata: {
+      model: 'claude',
+      features: {
+        usesXML: true,
+        usesThinking: options.complexity === 'high',
+        usesPrefilling: options.enablePrefilling !== false,
+        usesArtifacts: options.generateArtifacts || detectArtifactNeed(prompt)
+      }
     }
   };
 }
@@ -221,7 +225,7 @@ Begin your response with <thinking> tags to show your reasoning process, then pr
 /**
  * Adds prefilling optimization hints
  */
-function addPrefillOptimization(prompt) {
+function addPrefillOptimization(prompt: string): string {
   const prefillHints = `
 <assistant_response_start>
 I'll help you with this task. Let me break down the approach:

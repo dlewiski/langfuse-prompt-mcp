@@ -3,13 +3,15 @@
  * Optimizations tailored for Google's Gemini models
  */
 
+import type { GeminiOptimizerOptions, OptimizerResult } from '../../types/modelOptimizers.js';
+
 /**
  * Applies Gemini-specific optimizations to a prompt
  * @param {string} prompt - Base-improved prompt
- * @param {Object} options - Gemini-specific options
- * @returns {Object} Gemini-optimized prompt with metadata
+ * @param {GeminiOptimizerOptions} options - Gemini-specific options
+ * @returns {OptimizerResult} Gemini-optimized prompt with metadata
  */
-function optimizeForGemini(prompt, options = {}) {
+function optimizeForGemini(prompt: string, options: GeminiOptimizerOptions = {}): OptimizerResult {
   const optimizations = [];
   let optimizedPrompt = prompt;
   
@@ -73,24 +75,26 @@ function optimizeForGemini(prompt, options = {}) {
   }
   
   return {
-    prompt: optimizedPrompt,
+    optimizedPrompt,
     optimizations,
-    model: 'gemini',
-    features: {
-      hasSafetySettings: true,
-      hasGrounding: options.enableGrounding !== false,
-      hasContextCaching: options.useContextCaching !== false && isLongContext(prompt),
-      hasMultiModal: options.multiModal || detectMultiModalNeed(prompt),
-      hasCodeExecution: detectCodeExecutionNeed(prompt)
-    },
-    configuration: safetyOptimized.configuration
+    metadata: {
+      model: 'gemini',
+      features: {
+        hasSafetySettings: true,
+        hasGrounding: options.enableGrounding !== false,
+        hasContextCaching: options.useContextCaching !== false && isLongContext(prompt),
+        hasMultiModal: options.multiModal || detectMultiModalNeed(prompt),
+        hasCodeExecution: detectCodeExecutionNeed(prompt)
+      },
+      configuration: safetyOptimized.configuration
+    }
   };
 }
 
 /**
  * Adds safety configuration for Gemini
  */
-function addSafetyConfiguration(prompt, options) {
+function addSafetyConfiguration(prompt: string, options: GeminiOptimizerOptions): { prompt: string; changed: boolean; configuration: any } {
   const taskType = detectTaskType(prompt);
   
   const safetySettings = {
@@ -124,7 +128,7 @@ Safety Settings: ${JSON.stringify(safetySettings, null, 2)}`;
 /**
  * Adds grounding instructions for factual accuracy
  */
-function addGroundingInstructions(prompt) {
+function addGroundingInstructions(prompt: string): string {
   const groundingSection = `
 ## Grounding and Citations
 
@@ -146,7 +150,7 @@ Enable grounding for:
 /**
  * Optimizes prompt for context caching
  */
-function optimizeForContextCaching(prompt) {
+function optimizeForContextCaching(prompt: string): string {
   // Split prompt into cacheable and dynamic parts
   const sections = [];
   
@@ -186,7 +190,7 @@ function optimizeForContextCaching(prompt) {
 /**
  * Adds multi-modal processing support
  */
-function addMultiModalSupport(prompt) {
+function addMultiModalSupport(prompt: string): string {
   const multiModalSection = `
 ## Multi-Modal Processing
 
@@ -210,7 +214,7 @@ This task may involve multiple input modalities:
 /**
  * Enhances multi-turn conversation coherence
  */
-function enhanceMultiTurnCoherence(prompt) {
+function enhanceMultiTurnCoherence(prompt: string): string {
   const coherenceSection = `
 ## Conversation Management
 
@@ -235,7 +239,7 @@ function enhanceMultiTurnCoherence(prompt) {
 /**
  * Adds code execution support
  */
-function addCodeExecutionSupport(prompt) {
+function addCodeExecutionSupport(prompt: string): string {
   const codeSection = `
 ## Code Execution Support
 
@@ -272,7 +276,7 @@ print(f"Result: {result}")
 /**
  * Optimizes markdown structure for Gemini
  */
-function optimizeMarkdownStructure(prompt) {
+function optimizeMarkdownStructure(prompt: string): string {
   // Ensure proper markdown hierarchy
   let optimized = prompt;
   
@@ -299,7 +303,7 @@ function optimizeMarkdownStructure(prompt) {
 /**
  * Detects the task type for safety configuration
  */
-function detectTaskType(prompt) {
+function detectTaskType(prompt: string): string {
   const promptLower = prompt.toLowerCase();
   
   if (promptLower.includes('learn') || promptLower.includes('teach') || promptLower.includes('explain')) {
@@ -320,14 +324,14 @@ function detectTaskType(prompt) {
 /**
  * Checks if the prompt is long enough for context caching
  */
-function isLongContext(prompt) {
+function isLongContext(prompt: string): boolean {
   return prompt.length > 2000 || prompt.split('\n').length > 50;
 }
 
 /**
  * Detects if multi-modal support is needed
  */
-function detectMultiModalNeed(prompt) {
+function detectMultiModalNeed(prompt: string): boolean {
   const multiModalKeywords = [
     'image', 'picture', 'visual', 'diagram', 'chart',
     'video', 'audio', 'file', 'document', 'attachment'
@@ -340,7 +344,7 @@ function detectMultiModalNeed(prompt) {
 /**
  * Detects if code execution might be needed
  */
-function detectCodeExecutionNeed(prompt) {
+function detectCodeExecutionNeed(prompt: string): boolean {
   const codeKeywords = [
     'calculate', 'compute', 'run', 'execute', 'test',
     'validate', 'algorithm', 'function', 'code', 'program'
@@ -353,8 +357,8 @@ function detectCodeExecutionNeed(prompt) {
 /**
  * Creates Gemini-specific example format
  */
-function createGeminiExample(input, output, context = null) {
-  const example = {
+function createGeminiExample(input: string, output: string, context: any = null): string {
+  const example: any = {
     input: input,
     output: output
   };

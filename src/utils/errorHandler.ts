@@ -7,6 +7,7 @@
 import { errorResponse } from './response.js';
 import { handlerLogger, serverLogger } from './logger.js';
 import { z } from 'zod';
+import { AppError } from '../types/errors.js';
 
 /**
  * Error types enumeration
@@ -22,18 +23,7 @@ export const ErrorType = {
   UNKNOWN: 'unknown_error',
 };
 
-/**
- * Custom error class for application-specific errors
- */
-export class AppError extends Error {
-  constructor(message, type = ErrorType.UNKNOWN, details = null) {
-    super(message);
-    this.name = 'AppError';
-    this.type = type;
-    this.details = details;
-    this.timestamp = new Date().toISOString();
-  }
-}
+// AppError is now imported from ../types/errors.js
 
 /**
  * Wrap async handler functions with error handling

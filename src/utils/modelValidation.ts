@@ -189,12 +189,13 @@ export function validateOptimizationQuality(optimizationResult) {
  * @returns {Object} Comprehensive validation result
  */
 export function validateOptimization(original, optimized, model, metrics) {
-  const result = {
+  const result: any = {
     valid: true,
     semantic: validateSemanticPreservation(original, optimized),
     syntax: validateModelSyntax(optimized, model),
     quality: validateOptimizationQuality({ metrics }),
-    overallScore: 0
+    overallScore: 0,
+    summary: ''
   };
   
   // Calculate overall validation score

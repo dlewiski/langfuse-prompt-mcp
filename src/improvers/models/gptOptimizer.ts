@@ -3,13 +3,15 @@
  * Optimizations tailored for OpenAI's GPT models
  */
 
+import type { GPTOptimizerOptions, OptimizerResult } from '../../types/modelOptimizers.js';
+
 /**
  * Applies GPT-specific optimizations to a prompt
  * @param {string} prompt - Base-improved prompt
- * @param {Object} options - GPT-specific options
- * @returns {Object} GPT-optimized prompt with metadata
+ * @param {GPTOptimizerOptions} options - GPT-specific options
+ * @returns {OptimizerResult} GPT-optimized prompt with metadata
  */
-function optimizeForGPT(prompt, options = {}) {
+function optimizeForGPT(prompt: string, options: GPTOptimizerOptions = {}): OptimizerResult {
   const optimizations = [];
   let optimizedPrompt = prompt;
   
@@ -71,23 +73,25 @@ function optimizeForGPT(prompt, options = {}) {
   }
   
   return {
-    prompt: optimizedPrompt,
+    optimizedPrompt,
     optimizations,
-    model: 'gpt',
-    features: {
-      hasSystemMessage: true,
-      hasResponseFormat: options.structuredOutput !== false,
-      hasFewShot: options.includeFewShot !== false,
-      hasFunctionCalling: options.enableFunctions || detectFunctionNeed(prompt)
-    },
-    parameters: parameterized.parameters
+    metadata: {
+      model: 'gpt',
+      features: {
+        hasSystemMessage: true,
+        hasResponseFormat: options.structuredOutput !== false,
+        hasFewShot: options.includeFewShot !== false,
+        hasFunctionCalling: options.enableFunctions || detectFunctionNeed(prompt)
+      },
+      parameters: parameterized.parameters
+    }
   };
 }
 
 /**
  * Creates an optimized system message
  */
-function createSystemMessage(prompt, options) {
+function createSystemMessage(prompt: string, options: GPTOptimizerOptions): { prompt: string; changed: boolean } {
   // Check if already formatted as system/user messages
   if (prompt.includes('"role": "system"') || prompt.startsWith('System:')) {
     return { prompt, changed: false };
@@ -144,7 +148,7 @@ function createSystemMessage(prompt, options) {
 /**
  * Adds response format schema for structured outputs
  */
-function addResponseFormat(prompt) {
+function addResponseFormat(prompt: string, options: GPTOptimizerOptions): string {
   // Detect what kind of output is expected
   const outputIndicators = {
     json: /json|object|dictionary|data structure/i,
@@ -225,7 +229,7 @@ function addResponseFormat(prompt) {
 /**
  * Adds few-shot learning examples
  */
-function addFewShotExamples(prompt, options) {
+function addFewShotExamples(prompt: string, options: GPTOptimizerOptions): string {
   const exampleFormat = `
 ## Examples
 
@@ -245,7 +249,7 @@ Now, for your task:`;
 /**
  * Adds function calling structure
  */
-function addFunctionCallingStructure(prompt) {
+function addFunctionCallingStructure(prompt: string): string {
   const functionTemplate = `
 ## Available Functions
 
@@ -280,7 +284,7 @@ Use these functions when appropriate to complete the task.`;
 /**
  * Adds parameter optimization hints
  */
-function addParameterHints(prompt, options) {
+function addParameterHints(prompt: string, options: GPTOptimizerOptions): { prompt: string; changed: boolean; parameters?: any } {
   const complexity = detectComplexity(prompt);
   
   const parameters = {
@@ -333,7 +337,7 @@ Show your reasoning process as you work through the problem.`;
 /**
  * Optimizes token usage for GPT models
  */
-function optimizeTokenUsage(prompt) {
+function optimizeTokenUsage(prompt: string): string {
   // Remove redundant whitespace
   let optimized = prompt.replace(/\n{3,}/g, '\n\n');
   
@@ -356,7 +360,7 @@ function optimizeTokenUsage(prompt) {
 /**
  * Detects if the prompt needs function calling
  */
-function detectFunctionNeed(prompt) {
+function detectFunctionNeed(prompt: string): boolean {
   const functionKeywords = [
     'calculate', 'process', 'fetch', 'retrieve', 'update',
     'query', 'search', 'api', 'database', 'external'
@@ -369,14 +373,14 @@ function detectFunctionNeed(prompt) {
 /**
  * Checks if prompt already has examples
  */
-function hasExamples(prompt) {
+function hasExamples(prompt: string): boolean {
   return /example:|e\.g\.|for instance|such as/i.test(prompt);
 }
 
 /**
  * Detects complexity level of the prompt
  */
-function detectComplexity(prompt) {
+function detectComplexity(prompt: string): number {
   let complexity = 0;
   
   // Length-based complexity
@@ -403,13 +407,13 @@ function detectComplexity(prompt) {
 /**
  * Creates GPT-specific example format
  */
-function createGPTExample(input, output) {
-  return {
+function createGPTExample(input: string, output: string): string {
+  return JSON.stringify({
     messages: [
       { role: "user", content: input },
       { role: "assistant", content: output }
     ]
-  };
+  }, null, 2);
 }
 
 export {

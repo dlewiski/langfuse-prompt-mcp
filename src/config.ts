@@ -326,8 +326,8 @@ export const CONFIG: Readonly<AppConfig> = Object.freeze({
 
 // Log configuration in debug mode
 if (CONFIG.DEBUG_MODE) {
-  configLogger.debug('Running with configuration:', CONFIG);
-  configLogger.debug('Model configuration:', MODEL_CONFIG);
+  configLogger.debug(`Running with configuration: ${JSON.stringify(CONFIG, null, 2)}`);
+  configLogger.debug(`Model configuration: ${JSON.stringify(MODEL_CONFIG, null, 2)}`);
 }
 
 /**
