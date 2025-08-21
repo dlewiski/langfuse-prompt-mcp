@@ -30,6 +30,9 @@ import { handleSave } from './src/handlers/save.js';
 import { serverLogger } from './src/utils/logger.js';
 import { PERFORMANCE } from './src/constants.js';
 
+// Import Queen Bee Orchestrator Integration
+import OrchestratorIntegration, { orchestratorTool } from './src/orchestrator/integration.js';
+
 // Handler mapping for better maintainability
 const TOOL_HANDLERS = {
   track: handleTrack,
@@ -39,6 +42,7 @@ const TOOL_HANDLERS = {
   patterns: handlePatterns,
   deploy: handleDeploy,
   save: handleSave,
+  orchestrate_prompt: orchestratorTool.handler, // Add orchestrator tool
 };
 
 // Server configuration
@@ -128,6 +132,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
  */
 async function main() {
   try {
+    // Initialize Queen Bee Orchestrator
+    serverLogger.info('Initializing Queen Bee Orchestrator...');
+    await OrchestratorIntegration.initialize();
+    serverLogger.info('Queen Bee Orchestrator ready - will auto-activate for all prompts');
+    
     const transport = new StdioServerTransport();
     
     // Set up graceful shutdown

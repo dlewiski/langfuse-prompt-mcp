@@ -1,0 +1,33 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "docs/api",
+  "exclude": [
+    "**/node_modules/**",
+    "**/test/**",
+    "**/dist/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.bench.ts"
+  ],
+  "includeVersion": true,
+  "plugin": [],
+  "readme": "README.md",
+  "theme": "default",
+  "name": "Prompt Expert MCP Server",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "disableSources": false,
+  "searchInComments": true,
+  "categorizeByGroup": true,
+  "navigation": {
+    "includeCategories": true,
+    "includeFolders": true
+  },
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  }
+}

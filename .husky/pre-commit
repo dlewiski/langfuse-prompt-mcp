@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for formatting and linting
+npx lint-staged
+
+# Check TypeScript compilation
+echo "🔍 Checking TypeScript compilation..."
+npx tsc --noEmit
+
+# Check type coverage
+echo "📊 Checking type coverage..."
+npx type-coverage --at-least 94
+
+# Run tests with type checking
+echo "🧪 Running tests with type checking..."
+npm test -- --typecheck --run
+
+echo "✅ All pre-commit checks passed!"
