@@ -16,7 +16,8 @@ export interface PromptMetadata {
   hasCode?: boolean;
   frameworks?: string[];
   category?: string;
-  [key: string]: unknown;
+  // Additional custom metadata can be added via extension
+  customFields?: Record<string, string | number | boolean>;
 }
 
 /**

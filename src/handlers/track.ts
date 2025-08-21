@@ -213,7 +213,7 @@ export async function handleTrack(
     // Create Langfuse trace
     const trace = (langfuse as LangfuseClient).trace({
       name: 'prompt-tracking',
-      metadata: enhancedMetadata,
+      metadata: enhancedMetadata as Record<string, unknown>,
       ...(context?.userId && { userId: context.userId }),
       ...(context?.sessionId && { sessionId: context.sessionId }),
       input: prompt,

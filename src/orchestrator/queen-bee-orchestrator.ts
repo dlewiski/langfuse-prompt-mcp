@@ -45,22 +45,45 @@ export class QueenBeeOrchestrator {
   // Prompt history tracking removed as it was unused
   // Can be re-added when needed for history functionality
   
-  // Phase handlers
-  private phase1: Phase1Analyzer;
-  private phase2: Phase2Improver;
-  private phase3: Phase3Finalizer;
-  private phase4: Phase4PatternExtractor;
+  // Phase handlers - lazily initialized
+  private phase1?: Phase1Analyzer;
+  private phase2?: Phase2Improver;
+  private phase3?: Phase3Finalizer;
+  private phase4?: Phase4PatternExtractor;
 
   private constructor(config?: Partial<OrchestratorConfig>) {
     this.config = this.mergeConfig(config);
-    
-    // Initialize phase handlers
-    this.phase1 = new Phase1Analyzer();
-    this.phase2 = new Phase2Improver(this.config);
-    this.phase3 = new Phase3Finalizer();
-    this.phase4 = new Phase4PatternExtractor(this.config);
-    
+    // Phase handlers are now lazily initialized on first use
     this.setupAutoActivation();
+  }
+
+  // Lazy initialization methods for phase handlers
+  private getPhase1(): Phase1Analyzer {
+    if (!this.phase1) {
+      this.phase1 = new Phase1Analyzer();
+    }
+    return this.phase1;
+  }
+
+  private getPhase2(): Phase2Improver {
+    if (!this.phase2) {
+      this.phase2 = new Phase2Improver(this.config);
+    }
+    return this.phase2;
+  }
+
+  private getPhase3(): Phase3Finalizer {
+    if (!this.phase3) {
+      this.phase3 = new Phase3Finalizer();
+    }
+    return this.phase3;
+  }
+
+  private getPhase4(): Phase4PatternExtractor {
+    if (!this.phase4) {
+      this.phase4 = new Phase4PatternExtractor(this.config);
+    }
+    return this.phase4;
   }
 
   static getInstance(config?: Partial<OrchestratorConfig>): QueenBeeOrchestrator {
@@ -143,7 +166,7 @@ export class QueenBeeOrchestrator {
       );
 
       // Add to history for pattern extraction
-      this.phase4.addToHistory(
+      this.getPhase4().addToHistory(
         phase3Results.finalPrompt,
         phase3Results.finalScore,
         phase1Results.context
@@ -191,7 +214,7 @@ export class QueenBeeOrchestrator {
   }
 
   private async executePhase1(prompt: string): Promise<Phase1Results> {
-    return await this.phase1.execute(prompt);
+    return await this.getPhase1().execute(prompt);
   }
 
   private async executePhase2(
@@ -199,7 +222,7 @@ export class QueenBeeOrchestrator {
     currentScore: number,
     context: any
   ): Promise<Phase2Results> {
-    return await this.phase2.execute(prompt, currentScore, context);
+    return await this.getPhase2().execute(prompt, currentScore, context);
   }
 
   private async executePhase3(
@@ -207,18 +230,18 @@ export class QueenBeeOrchestrator {
     originalScore: number,
     phase2Results: Phase2Results
   ): Promise<Phase3Results> {
-    return await this.phase3.execute(originalPrompt, originalScore, phase2Results);
+    return await this.getPhase3().execute(originalPrompt, originalScore, phase2Results);
   }
 
   private executePhase4Async(): void {
-    this.phase4.executeAsync();
+    this.getPhase4().executeAsync();
   }
 
   private async fallbackTracking(prompt: string): Promise<void> {
     this.logger.info("🔄 Fallback: Basic tracking");
     try {
       // Simple tracking without orchestration
-      this.phase4.addToHistory(prompt, 50); // Default score
+      this.getPhase4().addToHistory(prompt, 50); // Default score
     } catch (error) {
       this.logger.error("❌ Fallback tracking failed", error);
     }
@@ -228,8 +251,8 @@ export class QueenBeeOrchestrator {
    * Get orchestrator status
    */
   getStatus(): any {
-    const history = this.phase4.getHistory();
-    const highScoreCount = this.phase4.getHighScoringCount();
+    const history = this.getPhase4().getHistory();
+    const highScoreCount = this.getPhase4().getHighScoringCount();
     
     return {
       active: true,

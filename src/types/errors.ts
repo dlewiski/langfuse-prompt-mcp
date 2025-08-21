@@ -56,3 +56,49 @@ export class LangfuseError extends AppError {
     this.name = 'LangfuseError';
   }
 }
+
+/**
+ * Network Error
+ * Thrown when network operations fail
+ */
+export class NetworkError extends AppError {
+  public readonly statusCode: number | undefined;
+  public readonly url: string | undefined;
+  
+  constructor(message: string, statusCode?: number, url?: string, details?: any) {
+    super(message, 'NetworkError', details);
+    this.name = 'NetworkError';
+    this.statusCode = statusCode;
+    this.url = url;
+  }
+}
+
+/**
+ * Timeout Error
+ * Thrown when operations exceed time limits
+ */
+export class TimeoutError extends AppError {
+  public readonly timeoutMs: number | undefined;
+  public readonly operation: string | undefined;
+  
+  constructor(message: string, timeoutMs?: number, operation?: string, details?: any) {
+    super(message, 'TimeoutError', details);
+    this.name = 'TimeoutError';
+    this.timeoutMs = timeoutMs;
+    this.operation = operation;
+  }
+}
+
+/**
+ * Processing Error
+ * Thrown when prompt processing fails
+ */
+export class ProcessingError extends AppError {
+  public readonly phase: string | undefined;
+  
+  constructor(message: string, phase?: string, details?: any) {
+    super(message, 'ProcessingError', details);
+    this.name = 'ProcessingError';
+    this.phase = phase;
+  }
+}

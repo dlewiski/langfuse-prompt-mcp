@@ -7,13 +7,10 @@ import { Langfuse } from 'langfuse';
 import { config as dotenvConfig } from 'dotenv';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { createConfigLogger } from '../utils/config-logger.js';
 
-// Custom logger to avoid circular dependency
-const configLogger = {
-  info: (msg: string) => console.log(`[Config] ${msg}`),
-  warn: (msg: string) => console.warn(`[Config] ${msg}`),
-  error: (msg: string, error?: any) => console.error(`[Config] ${msg}`, error || ''),
-};
+// Use proper logger abstraction to avoid circular dependency
+const configLogger = createConfigLogger('Config');
 
 // Load environment variables from .claude/.env
 const envPath = join(process.env.HOME || '', '.claude', '.env');
