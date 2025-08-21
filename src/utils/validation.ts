@@ -1,15 +1,43 @@
 /**
- * Validation utilities for input sanitization and security
- * @module utils/validation
+ * Consolidated validation utilities for input sanitization and security
+ * @module utils/validation-consolidated
  */
 
-// Note: zod import removed as it was unused
+import { z } from 'zod';
+import { AppError } from '../types/errors.js';
+
+/**
+ * Error types enumeration
+ */
+export const ErrorType = {
+  VALIDATION: 'validation_error',
+  EVALUATION: 'evaluation_error',
+  IMPROVEMENT: 'improvement_error',
+  LLM: 'llm_error',
+  LANGFUSE: 'langfuse_error',
+  NETWORK: 'network_error',
+  TIMEOUT: 'timeout_error',
+  UNKNOWN: 'unknown_error',
+};
+
+/**
+ * Validation result interface
+ */
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  errors?: string[];
+  sanitized?: string;
+  metadata?: {
+    originalLength?: number;
+    sanitizedLength?: number;
+    hasCode?: boolean;
+    language?: string | null;
+  }
+}
 
 /**
  * Sanitize string input to prevent injection attacks
- * @param {string} input - Input string
- * @param {number} maxLength - Maximum allowed length
- * @returns {string} Sanitized string
  */
 export function sanitizeString(input: any, maxLength: number = 10000): string {
   if (typeof input !== 'string') {
@@ -24,22 +52,44 @@ export function sanitizeString(input: any, maxLength: number = 10000): string {
 }
 
 /**
- * Validate and sanitize prompt text
- * @param {string} prompt - Prompt text
- * @returns {Object} Validation result
+ * Validate required fields in an object
+ * Unified version that throws AppError or returns ValidationResult
  */
-export function validatePrompt(prompt: any): { 
-  valid: boolean; 
-  errors: string[]; 
-  sanitized: string;
-  metadata?: {
-    originalLength: number;
-    sanitizedLength: number;
-    hasCode: boolean;
-    language: string | null;
+export function validateRequired(
+  obj: any, 
+  requiredFields: string[],
+  throwOnError: boolean = false
+): ValidationResult | void {
+  const missing = requiredFields.filter((field: string) => !obj[field]);
+  
+  if (missing.length > 0) {
+    const errorMessage = `Missing required fields: ${missing.join(', ')}`;
+    
+    if (throwOnError) {
+      throw new AppError(
+        errorMessage,
+        ErrorType.VALIDATION,
+        { missing }
+      );
+    }
+    
+    return {
+      valid: false,
+      error: errorMessage,
+      errors: missing.map(field => `Missing field: ${field}`)
+    };
   }
-} {
-  const errors = [];
+  
+  if (!throwOnError) {
+    return { valid: true };
+  }
+}
+
+/**
+ * Validate and sanitize prompt text
+ */
+export function validatePrompt(prompt: any): ValidationResult {
+  const errors: string[] = [];
   
   // Check basic validity
   if (!prompt || typeof prompt !== 'string') {
@@ -85,9 +135,70 @@ export function validatePrompt(prompt: any): {
 }
 
 /**
- * Detect programming language from prompt
- * @param {string} text - Text to analyze
- * @returns {string|null} Detected language or null
+ * Validate Zod schema and return consistent result
+ */
+export function validateSchema<T>(
+  data: unknown,
+  schema: z.ZodSchema<T>
+): ValidationResult & { data?: T } {
+  try {
+    const validated = schema.parse(data);
+    return { valid: true, data: validated };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors = error.errors.map(e => 
+        `${e.path.join('.')}: ${e.message}`
+      );
+      return {
+        valid: false,
+        errors,
+        error: errors.join('; ')
+      };
+    }
+    return {
+      valid: false,
+      error: 'Validation failed',
+      errors: ['Unknown validation error']
+    };
+  }
+}
+
+/**
+ * Validate environment configuration
+ */
+export function validateEnvironment(): { 
+  valid: boolean; 
+  missing: string[];
+  warnings: string[];
+  configured: string[];
+} {
+  const required = [
+    'LANGFUSE_PUBLIC_KEY',
+    'LANGFUSE_SECRET_KEY',
+  ];
+
+  const optional = [
+    'LANGFUSE_HOST',
+    'MIN_IMPROVEMENT_SCORE',
+    'MAX_ITERATIONS',
+    'PATTERN_MIN_SCORE',
+    'USE_LLM_JUDGE',
+    'LLM_MODEL',
+  ];
+
+  const missing = required.filter(key => !process.env[key]);
+  const warnings = optional.filter(key => !process.env[key]);
+
+  return {
+    valid: missing.length === 0,
+    missing,
+    warnings,
+    configured: required.filter(key => process.env[key]),
+  };
+}
+
+/**
+ * Detect programming language from text
  */
 function detectLanguage(text: string): string | null {
   const languagePatterns = [
@@ -111,12 +222,9 @@ function detectLanguage(text: string): string | null {
 
 /**
  * Create a rate limiter
- * @param {number} maxRequests - Maximum requests allowed
- * @param {number} windowMs - Time window in milliseconds
- * @returns {Function} Rate limit checker
  */
 export function createRateLimiter(maxRequests: number = 10, windowMs: number = 60000) {
-  const requests = new Map();
+  const requests = new Map<string, number[]>();
 
   return function checkRateLimit(identifier: string) {
     const now = Date.now();
@@ -151,40 +259,5 @@ export function createRateLimiter(maxRequests: number = 10, windowMs: number = 6
       remaining: maxRequests - validRequests.length,
       resetAt: new Date(now + windowMs),
     };
-  };
-}
-
-/**
- * Validate environment configuration
- * @returns {Object} Validation result with missing variables
- */
-export function validateEnvironment(): { 
-  valid: boolean; 
-  missing: string[];
-  warnings: string[];
-  configured: string[];
-} {
-  const required = [
-    'LANGFUSE_PUBLIC_KEY',
-    'LANGFUSE_SECRET_KEY',
-  ];
-
-  const optional = [
-    'LANGFUSE_HOST',
-    'MIN_IMPROVEMENT_SCORE',
-    'MAX_ITERATIONS',
-    'PATTERN_MIN_SCORE',
-    'USE_LLM_JUDGE',
-    'LLM_MODEL',
-  ];
-
-  const missing = required.filter(key => !process.env[key]);
-  const warnings = optional.filter(key => !process.env[key]);
-
-  return {
-    valid: missing.length === 0,
-    missing,
-    warnings,
-    configured: required.filter(key => process.env[key]),
   };
 }
